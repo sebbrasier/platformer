@@ -7,11 +7,8 @@ class GameView(arcade.View):
     wall_list : arcade.SpriteList[arcade.Sprite]
     coin_list : arcade.SpriteList[arcade.Sprite]
     camera: arcade.camera.Camera2D
-    #Variables de Control de Camera
-    y_min = 64
-    y_max = 128
-    x_min = 64
-    x_max = 1200
+    WINDOW_WIDTH = 1280
+    WINDOW_HEIGHT = 720
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -103,7 +100,7 @@ class GameView(arcade.View):
         if (key == arcade.key.RIGHT or key == arcade.key.LEFT) and (self.key_right == False and self.key_left == False):
             #stop later mouvement
             self.player_sprite.change_x = 0
-            self.allow_movement = False
+  
 
 
     def on_draw(self) -> None:
@@ -115,12 +112,33 @@ class GameView(arcade.View):
             self.coin_list.draw()
 
 
+    #fonction de control de camera
+    def cam_control(self) -> None:
+         player_x = self.player_sprite.center_x
+         player_y = self.player_sprite.center_y
+         #Calcule des "Bords" de la caméra:
+         right_edge = self.camera.position[0] + (self.WINDOW_WIDTH // 2) - 410
+         left_edge = self.camera.position[0] - (self.WINDOW_WIDTH // 2) + 410
+         upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT // 2) - 300
+         down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT // 2) + 250
+
+         if player_x >= right_edge:
+              self.camera.position = (right_edge + abs(player_x - right_edge) - (self.WINDOW_WIDTH // 2 - 410), self.camera.position[1]) #type ignore
+         if player_x <= left_edge:
+              self.camera.position = (left_edge - abs(player_x - left_edge) + (self.WINDOW_WIDTH // 2 - 410) , self.camera.position[1]) #type ignore
+         if player_y >= upper_edge:
+              self.camera.position = (self.camera.position[0], upper_edge + abs(player_y - upper_edge) - (self.WINDOW_HEIGHT // 2 - 300))#type ignore
+         if player_y <= down_edge:
+              self.camera.position = (self.camera.position[0], down_edge - abs(player_y - down_edge) + (self.WINDOW_HEIGHT // 2 - 250))#type ignore
+
+
+
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
         self.player_sprite.center_x += self.player_sprite.change_x
         self.physics_engine.update()
 
-        self.camera.position = self.player_sprite.position # type: ignore
+        self.cam_control()
 
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
