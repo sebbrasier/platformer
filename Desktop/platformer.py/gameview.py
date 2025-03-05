@@ -9,6 +9,11 @@ class GameView(arcade.View):
     camera: arcade.camera.Camera2D
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
+
+    # initialisation des variables pour le son 
+
+    coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
+    jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -19,7 +24,6 @@ class GameView(arcade.View):
 
         # Choose a nice comfy background color
         self.background_color = arcade.csscolor.CORNFLOWER_BLUE
-
 
         # Setup our game
         self.setup()
@@ -66,11 +70,6 @@ class GameView(arcade.View):
             gravity_constant=PLAYER_GRAVITY,
         )
         self.camera = arcade.camera.Camera2D()
-
-        # initialisation des variables pour le son 
-
-        self.coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
-        self.jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
 
 
     key_right : bool = False
@@ -129,6 +128,7 @@ class GameView(arcade.View):
          upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT // 2) - 300
          down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT // 2) + 250
 
+        
          if player_x >= right_edge:
               self.camera.position = (self.camera.position[0] + abs(player_x - right_edge) , self.camera.position[1]) #type ignore
          if player_x <= left_edge:
@@ -151,9 +151,8 @@ class GameView(arcade.View):
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
-            #son
+        #son
             arcade.play_sound(self.coin_sound)
-        
         
 
 
