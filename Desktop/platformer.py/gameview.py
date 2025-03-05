@@ -151,6 +151,7 @@ class GameView(arcade.View):
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
+            #son
             arcade.play_sound(self.coin_sound)
         
         
