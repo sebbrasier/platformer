@@ -122,6 +122,7 @@ class GameView(arcade.View):
          upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT // 2) - 300
          down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT // 2) + 250
 
+        
          if player_x >= right_edge:
               self.camera.position = (self.camera.position[0] + abs(player_x - right_edge) , self.camera.position[1]) #type ignore
          if player_x <= left_edge:
