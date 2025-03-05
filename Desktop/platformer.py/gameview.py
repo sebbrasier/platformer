@@ -9,6 +9,11 @@ class GameView(arcade.View):
     camera: arcade.camera.Camera2D
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
+
+    # initialisation des variables pour le son 
+
+    coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
+    jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -145,7 +150,11 @@ class GameView(arcade.View):
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
-        
+<<<<<<< HEAD
+=======
+        #son
+            arcade.play_sound(self.coin_sound)
+>>>>>>> branche-seb
         
 
 
