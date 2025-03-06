@@ -93,6 +93,10 @@ class GameView(arcade.View):
         if key == arcade.key.UP and self.physics_engine.can_jump(): 
                 # start moving to the left
                 self.player_sprite.change_y = PLAYER_JUMP_SPEED
+
+                #son
+                arcade.play_sound(self.jump_sound)
+
         if key == arcade.key.ESCAPE:
                 self.setup()
 
