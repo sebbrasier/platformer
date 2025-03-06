@@ -28,15 +28,6 @@ class GameView(arcade.View):
         # Setup our game
         self.setup()
 
-    def lecture_map(self) -> None:
-         try:
-            with open("map1.txt", "r", encoding="utf-8", newline='') as f:
-                x = int(f.readline())
-                y = int(f.readline())
-         except OSError as e:
-            print("Le fichier n'a pas pu être lu :")
-            print(e)
-    
 
     def setup(self) -> None:
         """Set up the game here."""

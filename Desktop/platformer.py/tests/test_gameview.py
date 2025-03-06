@@ -29,3 +29,19 @@ def test_collect_coins(window: arcade.Window) -> None:
 
     # We should have collected the second coin
     assert len(view.coin_list) == INITIAL_COIN_COUNT - 2
+
+    # test que la topuche echap pour reset le jeu fonctionne bien
+
+    def test_reset_with_escape(window: arcade.Window) -> None:
+        view = GameView()
+        window.show_view(view)
+
+        # le joueur se déplace
+        view.player_sprite.center_x += 200
+
+        # Appuyer sur ECHAP pour réinitialiser
+        view.on_key_press(arcade.key.ESCAPE, 0)
+
+        # Vérifier que le joueur est revenu à sa position initiale
+        assert view.player_sprite.center_x == 64
+        assert view.player_sprite.center_y == 128
