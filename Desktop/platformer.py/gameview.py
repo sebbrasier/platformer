@@ -37,7 +37,7 @@ class GameView(arcade.View):
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
     #Taille d'un "carreau" de la grille définie dans readmap
-    Grid_size = 64 
+    Grid_size = 64
 
     # initialisation des variables pour le son 
 
