@@ -2,9 +2,15 @@ import arcade
 
 from gameview import GameView
 
+from readmap import Map_game
+
+
+
+
 INITIAL_COIN_COUNT = 5
 
 def test_collect_coins(window: arcade.Window) -> None:
+    assert(Map_game.setup[0][0]) == "*"
     view = GameView()
     window.show_view(view)
 

@@ -1,4 +1,29 @@
 import arcade
+from readmap import Map
+from readmap import Map_game
+
+#fonction qui convertit les charactères de la map en un type de bloc et son asset:
+def char_to_sprite(char: str) -> tuple[str, str]:
+     if char == " ":
+          return (" ", " ")
+     if char == "=":
+          return ("Wall", ":resources:/images/tiles/grassMid.png")
+     if char == "-":
+          return ("Wall", ":resources:/images/tiles/grassHalf_mid.png")
+     if char == "x":
+          return ("Wall", ":resources:/images/tiles/boxCrate_double.png")
+     if char == "*":
+          return ("Coin", ":resources:/images/items/coinGold.png")
+     if char == "o":
+          return ("Monster", ":resources:/images/enemies/slimeBlue.png")
+     if char == "£":
+          return ("No-go", ":resources:/images/tiles/lava.png")
+     if char == "S":
+          return ("Player", ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png")
+     else:
+          raise Exception("Erreur: caractere inconnu")
+     
+     
 
 class GameView(arcade.View):
 
@@ -6,9 +31,13 @@ class GameView(arcade.View):
     player_sprite_list : arcade.SpriteList[arcade.Sprite]
     wall_list : arcade.SpriteList[arcade.Sprite]
     coin_list : arcade.SpriteList[arcade.Sprite]
+    no_go_list : arcade.SpriteList[arcade.Sprite]
+    monster_list : arcade.SpriteList[arcade.Sprite]
     camera: arcade.camera.Camera2D
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
+    #Taille d'un "carreau" de la grille définie dans readmap
+    Grid_size = 64 
 
     # initialisation des variables pour le son 
 
@@ -17,6 +46,20 @@ class GameView(arcade.View):
    
     """Lateral speed of the player, in pixels per frame."""
     
+    #Ranger les sprites dans la bonne liste selon son asset
+    def sprite_type(self, type : str, sprite: arcade.Sprite) -> None:
+        if type == "Wall":
+            self.wall_list.append(sprite)
+        if type == "Coin":
+              self.coin_list.append(sprite)
+        if type == "Monster":
+            self.monster_list.append(sprite)
+        if type == "No-go":
+            self.no_go_list.append(sprite)
+        if type == "Player":
+            self.player_sprite = sprite
+            self.player_sprite_list = arcade.SpriteList()
+            self.player_sprite_list.append(self.player_sprite)
 
     def __init__(self) -> None:
         # Magical incantion: initialize the Arcade view
@@ -27,51 +70,30 @@ class GameView(arcade.View):
 
         # Setup our game
         self.setup()
-
-    def lecture_map(self) -> None:
-         try:
-            with open("map1.txt", "r", encoding="utf-8", newline='') as f:
-                x = int(f.readline())
-                y = int(f.readline())
-         except OSError as e:
-            print("Le fichier n'a pas pu être lu :")
-            print(e)
     
 
     def setup(self) -> None:
         """Set up the game here."""
         PLAYER_GRAVITY = 1
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png",
-            center_x=64,
-            center_y=128
-        )
-        self.player_sprite_list = arcade.SpriteList()
-        self.player_sprite_list.append(self.player_sprite)
 
+        #Initialiser les listes d'objets
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
         self.coin_list = arcade.SpriteList(use_spatial_hash=True)
-        for i in range(20):
-            wall_sprite = arcade.Sprite(":resources:images/tiles/grassMid.png",
-                center_x = (64*i),
-                center_y=32, 
-                scale = 0.5
-            )
-            self.wall_list.append(wall_sprite)
-        for i in range(1,4):
-            box_sprite = arcade.Sprite(":resources:images/tiles/boxCrate_double.png",
-                center_x = (128 + 256*i),
-                center_y=96, 
-                scale = 0.5
-            )
-            self.wall_list.append(box_sprite)
-        for i in range(1, 5):
-            coin_sprite = arcade.Sprite(":resources:images/items/coinGold.png",
-                center_x = (256*i),
-                center_y=96, 
-                scale = 0.5
-            )
-            self.coin_list.append(coin_sprite)
-
+        self.no_go_list = arcade.SpriteList(use_spatial_hash=True)
+        self.monster_list = arcade.SpriteList(use_spatial_hash=True)
+        
+        #Création de la map
+        for i in  range(len(Map_game.setup)):
+            for j in range(len(Map_game.setup[i])):
+                sprite = Map_game.setup[i][j] 
+                if char_to_sprite(sprite) != (" ", " "):
+                    asset = arcade.Sprite(char_to_sprite(sprite)[1],
+                        center_y = len(Map_game.setup) - i * self.Grid_size,
+                        center_x = j * self.Grid_size,
+                        scale = 0.5
+                    )
+                    self.sprite_type(char_to_sprite(sprite)[0], asset)
+                
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
             walls = self.wall_list,
@@ -79,13 +101,13 @@ class GameView(arcade.View):
         )
         self.camera = arcade.camera.Camera2D()
 
-
+    #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
     key_left : bool = False
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
-        PLAYER_MOVEMENT_SPEED = 5
+        PLAYER_MOVEMENT_SPEED = 4
         PLAYER_JUMP_SPEED = 18
         
         if key == arcade.key.RIGHT:
@@ -117,8 +139,6 @@ class GameView(arcade.View):
         if (key == arcade.key.RIGHT or key == arcade.key.LEFT) and (self.key_right == False and self.key_left == False):
             #stop later mouvement
             self.player_sprite.change_x = 0
-  
-
 
     def on_draw(self) -> None:
         """Render the screen"""
@@ -127,7 +147,8 @@ class GameView(arcade.View):
             self.player_sprite_list.draw()
             self.wall_list.draw()
             self.coin_list.draw()
-
+            self.monster_list.draw()
+            self.no_go_list.draw()
 
     #fonction de control de camera
     def cam_control(self) -> None:
@@ -139,7 +160,7 @@ class GameView(arcade.View):
          upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT // 2) - 300
          down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT // 2) + 250
 
-        
+        #La caméra se déplace avec le joueur
          if player_x >= right_edge:
               self.camera.position = (self.camera.position[0] + abs(player_x - right_edge) , self.camera.position[1]) #type ignore
          if player_x <= left_edge:
@@ -150,14 +171,12 @@ class GameView(arcade.View):
               self.camera.position = (self.camera.position[0], self.camera.position[1] - abs(player_y - down_edge))#type ignore
 
 
-
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
         self.player_sprite.center_x += self.player_sprite.change_x
         self.physics_engine.update()
 
         self.cam_control()
-
 
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
