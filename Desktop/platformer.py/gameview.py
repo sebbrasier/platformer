@@ -88,7 +88,7 @@ class GameView(arcade.View):
                 sprite = Map_game.setup[i][j] 
                 if char_to_sprite(sprite) != (" ", " "):
                     asset = arcade.Sprite(char_to_sprite(sprite)[1],
-                        center_y = len(Map_game.setup) - i * self.Grid_size,
+                        center_y = (len(Map_game.setup) - i) * self.Grid_size,
                         center_x = j * self.Grid_size,
                         scale = 0.5
                     )
