@@ -43,6 +43,7 @@ class GameView(arcade.View):
 
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
     jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
+    game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -105,6 +106,8 @@ class GameView(arcade.View):
     key_right : bool = False
     key_left : bool = False
 
+
+        
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
         PLAYER_MOVEMENT_SPEED = 4
@@ -178,6 +181,9 @@ class GameView(arcade.View):
 
         self.cam_control()
 
+        for blob in self.monster_list:
+             blob.center_x += blob.change_x
+
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
@@ -185,7 +191,24 @@ class GameView(arcade.View):
         #son
             arcade.play_sound(self.coin_sound)
 
-        
+        # game over si le joueur entre en collsion avec la lave
+
+        lava_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.no_go_list)
+        for lava in lava_hit:
+            self.setup()
+
+        # son 
+            arcade.play_sound(self.game_over_sound)
+
+        # game over si le joueur entre en collision un monstre
+
+        monster_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.monster_list)
+        for monster in monster_hit:
+            self.setup()
+
+        # son 
+            arcade.play_sound(self.game_over_sound)
+             
 
 
 
