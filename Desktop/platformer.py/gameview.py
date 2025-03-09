@@ -23,7 +23,6 @@ def char_to_sprite(char: str) -> tuple[str, str]:
      else:
           raise Exception("Erreur: caractere inconnu")
      
-     
 
 class GameView(arcade.View):
 
@@ -33,11 +32,14 @@ class GameView(arcade.View):
     coin_list : arcade.SpriteList[arcade.Sprite]
     no_go_list : arcade.SpriteList[arcade.Sprite]
     monster_list : arcade.SpriteList[arcade.Sprite]
+    #variable qui va stocker les vitesses de chaque monstre
+    m_speed : list[int]
+    m_speed = [] 
     camera: arcade.camera.Camera2D
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
     #Taille d'un "carreau" de la grille définie dans readmap
-    Grid_size = 64 
+    Grid_size = 64
 
     # initialisation des variables pour le son 
 
@@ -55,6 +57,7 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Monster":
             self.monster_list.append(sprite)
+            self.m_speed.append(-1)
         if type == "No-go":
             self.no_go_list.append(sprite)
         if type == "Player":
@@ -75,6 +78,7 @@ class GameView(arcade.View):
 
     def setup(self) -> None:
         """Set up the game here."""
+        self.m_speed = []
         PLAYER_GRAVITY = 1
 
         #Initialiser les listes d'objets
@@ -89,7 +93,7 @@ class GameView(arcade.View):
                 sprite = Map_game.setup[i][j] 
                 if char_to_sprite(sprite) != (" ", " "):
                     asset = arcade.Sprite(char_to_sprite(sprite)[1],
-                        center_y = len(Map_game.setup) - i * self.Grid_size,
+                        center_y = (len(Map_game.setup) - i) * self.Grid_size,
                         center_x = j * self.Grid_size,
                         scale = 0.5
                     )
@@ -101,13 +105,12 @@ class GameView(arcade.View):
             gravity_constant=PLAYER_GRAVITY,
         )
         self.camera = arcade.camera.Camera2D()
+        
 
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
     key_left : bool = False
 
-
-        
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
         PLAYER_MOVEMENT_SPEED = 4
@@ -153,6 +156,7 @@ class GameView(arcade.View):
             self.monster_list.draw()
             self.no_go_list.draw()
 
+
     #fonction de control de camera
     def cam_control(self) -> None:
          player_x = self.player_sprite.center_x
@@ -173,7 +177,40 @@ class GameView(arcade.View):
          if player_y <= down_edge:
               self.camera.position = (self.camera.position[0], self.camera.position[1] - abs(player_y - down_edge))#type ignore
 
-
+    #Fonction qui déplace le blob
+    def blob_position(self) -> None:
+         i = 0
+         for blob in self.monster_list:
+            collision = self.blob_collision(blob, self.m_speed[i])
+            if collision == True:
+                 #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
+                 self.m_speed[i] *= -1
+                 blob.scale_x *= -1
+            blob.change_x = self.m_speed[i]
+            i += 1
+         self.monster_list.update()
+    
+    #Fonction qui détecte les collisions
+    def blob_collision(self, blob: arcade.Sprite, change_x : int) -> bool:
+        #point en dessous du blob pour les collision sur les bords
+        point_y = blob.bottom - (self.Grid_size / 2)
+        if change_x == -1:
+             point_x = blob.left
+        else:
+             point_x = blob.right
+        point = (point_x, point_y)
+        #detecte les collisions entre le point et l'air, lave et murs
+        collided_lava = arcade.get_sprites_at_point(point, self.no_go_list)
+        collided_box = arcade.get_sprites_at_point((point_x, blob.center_y), self.wall_list)
+        collided_air = arcade.get_sprites_at_point(point, self.wall_list)
+        if collided_air == []:
+             return True
+        for lava in collided_lava:
+             return True
+        for box in collided_box:
+             return True
+        return False
+    
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
         self.player_sprite.center_x += self.player_sprite.change_x
@@ -181,31 +218,27 @@ class GameView(arcade.View):
 
         self.cam_control()
 
-        for blob in self.monster_list:
-             blob.center_x += blob.change_x
-
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
-
         #son
             arcade.play_sound(self.coin_sound)
+        
+
+        #position du blob
+        self.blob_position()
 
         # game over si le joueur entre en collsion avec la lave
-
         lava_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.no_go_list)
         for lava in lava_hit:
             self.setup()
-
         # son 
             arcade.play_sound(self.game_over_sound)
 
         # game over si le joueur entre en collision un monstre
-
         monster_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.monster_list)
         for monster in monster_hit:
             self.setup()
-
         # son 
             arcade.play_sound(self.game_over_sound)
              
