@@ -162,10 +162,10 @@ class GameView(arcade.View):
          player_x = self.player_sprite.center_x
          player_y = self.player_sprite.center_y
          #Calcule des "Bords" de la caméra:
-         right_edge = self.camera.position[0] + (self.WINDOW_WIDTH // 2) - 410
-         left_edge = self.camera.position[0] - (self.WINDOW_WIDTH // 2) + 410
-         upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT // 2) - 300
-         down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT // 2) + 250
+         right_edge = self.camera.position[0] + (self.WINDOW_WIDTH / 2) - 410
+         left_edge = self.camera.position[0] - (self.WINDOW_WIDTH / 2) + 410
+         upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT / 2) - 300
+         down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT / 2) + 250
 
         #La caméra se déplace avec le joueur
          if player_x >= right_edge:
