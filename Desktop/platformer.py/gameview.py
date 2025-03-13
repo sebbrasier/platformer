@@ -1,6 +1,6 @@
 import arcade
 from readmap import Map
-from readmap import Map_game
+from readmap import *
 import math
 
 
@@ -22,18 +22,19 @@ def char_to_sprite(char: str) -> tuple[str, str]:
           return ("No-go", ":resources:/images/tiles/lava.png")
      if char == "S":
           return ("Player", ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png")
+     if char == "E":
+          return ("Next_level", ":resources:/images/tiles/signExit.png")
      else:
           raise Exception("Erreur: caractere inconnu")
      
-
-  
-     
-
 class GameView(arcade.View):
 
+    #Liste pour les objets situés à la fin du niveau
+    next_level_list : arcade.SpriteList[arcade.Sprite]
     
     player_sprite : arcade.Sprite
     player_sprite_list : arcade.SpriteList[arcade.Sprite]
+
     wall_list : arcade.SpriteList[arcade.Sprite]
     coin_list : arcade.SpriteList[arcade.Sprite]
     no_go_list : arcade.SpriteList[arcade.Sprite]
@@ -57,7 +58,6 @@ class GameView(arcade.View):
 
    
     """Lateral speed of the player, in pixels per frame."""
-
     
     #Ranger les sprites dans la bonne liste selon son asset
     def sprite_type(self, type : str, sprite: arcade.Sprite) -> None:
@@ -74,6 +74,9 @@ class GameView(arcade.View):
             self.player_sprite = sprite
             self.player_sprite_list = arcade.SpriteList()
             self.player_sprite_list.append(self.player_sprite)
+        if type == "Next_level":
+            self.next_level_list.append(sprite)
+             
 
     def __init__(self) -> None:
         # Magical incantion: initialize the Arcade view
@@ -97,6 +100,11 @@ class GameView(arcade.View):
         # Setup our game
         self.setup()
     
+    def check_for_next_level(self) -> None:
+        exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
+        for exit in exit_list:
+             All_maps.index += 1
+             self.setup()
 
     def setup(self) -> None:
         """Set up the game here."""
@@ -108,14 +116,16 @@ class GameView(arcade.View):
         self.coin_list = arcade.SpriteList(use_spatial_hash=True)
         self.no_go_list = arcade.SpriteList(use_spatial_hash=True)
         self.monster_list = arcade.SpriteList(use_spatial_hash=True)
+        self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
         
+        MAP = All_maps.Maps[All_maps.index]
         #Création de la map
-        for i in  range(len(Map_game.setup)):
-            for j in range(len(Map_game.setup[i])):
-                sprite = Map_game.setup[i][j] 
+        for i in  range(len(MAP)):
+            for j in range(len(MAP[i])):
+                sprite = MAP[i][j] 
                 if char_to_sprite(sprite) != (" ", " "):
                     asset = arcade.Sprite(char_to_sprite(sprite)[1],
-                        center_y = (len(Map_game.setup) - i) * self.Grid_size,
+                        center_y = (len(MAP) - i) * self.Grid_size,
                         center_x = j * self.Grid_size,
                         scale = 0.5
                     )
@@ -138,7 +148,7 @@ class GameView(arcade.View):
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT :
             self.sword.visible = True
-            self.sword_timer = 0.2
+            #self.sword_timer = 0.2
 
             # Positionner l'épée en fonction de l'angle
             self.update_sword_orientation(x,y)
@@ -159,12 +169,16 @@ class GameView(arcade.View):
         ref_y = self.player_sprite.center_y   # ajustez ce décalage pour "baisser" le point de référence
         # Calcul de l'angle entre le point de référence et le clic (en radians)
         angle = math.atan2(ref_x - world_x,ref_y - world_y)
-        # Positionner l'épée pour que le point "handle" (après rotation) se retrouve exactement sur target
-        self.sword.center_x = ref_x + math.sin(angle+math.pi) * self.SWORD_RADIUS_X 
-        self.sword.center_y = ref_y + math.cos(angle+math.pi) * self.SWORD_RADIUS_Y - 20
         # Appliquer la rotation à l'image (toujours +45° pour correspondre à l'orientation de l'image de base)
         self.sword.angle = math.degrees(angle) + 135
         return angle
+    
+    def update_sword_position(self) -> None:
+         
+        sword_r = math.radians(self.sword.angle - 45)
+        vec = (30 * math.cos(sword_r), 30 * math.sin(-sword_r))
+        self.sword.center_x = self.player_sprite.center_x + vec[0]
+        self.sword.center_y = self.player_sprite.center_y + vec[1]
     
     # fonction qui detecte si l'épée touche un blob
 
@@ -175,9 +189,6 @@ class GameView(arcade.View):
             for monster in monsters_hit:
                 monster.remove_from_sprite_lists()
         
-            
-         
-
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
         PLAYER_MOVEMENT_SPEED = 4
@@ -223,6 +234,7 @@ class GameView(arcade.View):
             self.monster_list.draw()
             self.no_go_list.draw()
             self.sword_list.draw()
+            self.next_level_list.draw()
 
 
     #fonction de control de camera
@@ -284,8 +296,7 @@ class GameView(arcade.View):
         self.player_sprite.center_x += self.player_sprite.change_x
         self.physics_engine.update()
 
-        
-
+        self.check_for_next_level()
         self.cam_control()
 
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
@@ -294,15 +305,15 @@ class GameView(arcade.View):
         #son
             arcade.play_sound(self.coin_sound)
 
+        #update position de l'épée 
+        self.update_sword_position()
 
+        #check si l'épée touche un monstre
         self.check_sword_hit_monster()
-
         if self.sword_timer > 0:
             self.sword_timer -= delta_time
             if self.sword_timer <= 0:
                 self.sword.visible = False
-            
-        
 
         #position du blob
         self.blob_position()

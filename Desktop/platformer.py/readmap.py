@@ -49,10 +49,43 @@ class Map:
     def __init__(self, dim: tuple[int, int], setup : list[list[str]]) -> None:
         self.dim = dim
         self.setup = setup
+    
+    def __str__(self) -> str:
+        return f"{self.dim}, {self.setup}" 
+    
+    def __len__(self) -> int:
+        return len(self.setup)
+    
+    def __getitem__(self, i:int) -> list[str]:
+        return self.setup[i]
 
+#Classe pour classer les maps
+class Map_list:
+    #Une liste de map, l'index représente la map affichée à l'écran
+    Maps : list[Map]
+    index : int
 
+    def __init__(self, Maps: list[Map], index:int) -> None:
+        self.Maps = Maps
+        self.index = index
+    
+    def __str__(self) -> str:
+        return f"{self.Maps}, {self.index}"
+    
+    def __len__(self) -> int:
+        return len(self.Maps)
+    
+    def __getitem__(self, i: int) -> Map:
+        return self.Maps[i]
+    
+
+All_maps = Map_list([], 0)
 #Ceci correspond à la map dans le jeu: initialisée dans gameview
 Map_game = Map(dim("maps/map1.txt"), lecture_map("maps/map1.txt"))
+Map_game2 = Map(dim("maps/map2.txt"), lecture_map("maps/map2.txt"))
+
+All_maps.Maps.append(Map_game)
+All_maps.Maps.append(Map_game2)
 
 
 
