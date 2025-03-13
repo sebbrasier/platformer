@@ -7,8 +7,7 @@ from readmap import Map_game
 
 
 
-INITIAL_COIN_COUNT = 3
-INITIAL_
+INITIAL_COIN_COUNT = 3 
 
 def test_collect_coins(window: arcade.Window) -> None:
     assert(Map_game.setup[0][0]) == "*"
