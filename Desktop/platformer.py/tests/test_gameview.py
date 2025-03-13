@@ -3,51 +3,119 @@ import arcade
 from gameview import GameView
 
 from readmap import Map_game
+from readmap import lecture_map
+from readmap import dim
+
+#test ouverture du fichier map
+def test_map() -> None:
+    #Bien vérifier que l'on a extrait les bonnes informations du text "map"
+    assert Map_game.setup[0][0] == "*"
+    assert Map_game.dim == (20, 6)
+    #Vérifier que la fonction qui lit des fichier gère correctement les exceptions
+    file = "non_existent_file.txt"
+    assert(lecture_map(file) == [])
+    #Vérifier que cela s'ouvre correctement avec le fichier map1.txt:
+    file2 = "maps/map1.txt"
+    assert(lecture_map(file2) != [])
 
 
+# test la collision des blobs
+def test_blob(window: arcade.Window) -> None:
+    view = GameView()
+    window.show_view(view)
+    monster_list = view.monster_list
+    window.test(30)
+    i = 0
+    #Vérifie que les premières secondes, le blob collisionne avec rien
+    for monster in monster_list:
+        change_x = view.m_speed[i]
+        assert view.blob_collision(monster, change_x) == False
+        i += 1
+    window.test(15)
+    #Vérifie que le blob change de diréction apres collision
+    for i in range(60):
+        monst = view.monster_list[0]
+        if (view.blob_collision(monst, view.m_speed[0]) == True):
+            assert view.m_speed[0] == -1
+            assert monst.scale_x == 0.5
+        window.test(1)
+
+    
+#test que l'on revient bien au début apres avoir touché un blob et de la lave
+def test_death(window: arcade.Window) -> None:
+    view = GameView()
+    window.show_view(view)
+    view.player_sprite.center_y += 128
+    view.player_sprite.center_x += 256
+    window.test(25)
+    assert view.player_sprite.center_x == 64
+    assert view.player_sprite.center_y == 128
+    view.player_sprite.center_x += 512
+    window.test(25)
+    assert view.player_sprite.center_x == 64
+    assert view.player_sprite.center_y == 128
 
 
-INITIAL_COIN_COUNT = 3 
+#test sauts multiples
+def test_jump(window: arcade.Window) -> None:
+    view = GameView()
+    window.show_view(view)
+    view.on_key_press(arcade.key.UP, 0)
+    view.on_key_release(arcade.key.UP, 0)
+    window.test(30)
+    view.on_key_press(arcade.key.UP, 0)
+    assert (view.player_sprite.change_y != 18)
+    view.on_key_release(arcade.key.UP, 0)
+    window.test(30)
+    view.on_key_press(arcade.key.UP, 0)
+    assert (view.player_sprite.change_y == 18)
+    window.test(30)
 
-def test_collect_coins(window: arcade.Window) -> None:
-    assert(Map_game.setup[0][0]) == "*"
+#test camera follow character
+def test_camera(window: arcade.Window) -> None:
     view = GameView()
     window.show_view(view)
 
-    # Make sure we have the amount of coins we expect at the start
-    assert len(view.coin_list) == INITIAL_COIN_COUNT
+    cam_i = view.camera.position[0]
+    left_edge = cam_i - (view.WINDOW_WIDTH / 2) + 410
+    view.on_key_press(arcade.key.LEFT, 0)
+    window.test(10)
+    view.on_key_release(arcade.key.LEFT, 0)
+    player_x = view.player_sprite.center_x
+    cam_f = view.camera.position[0]
+    assert (cam_f == cam_i - abs(player_x - left_edge))
+    window.test(30)
 
-    # Start moving right
+#test character sprite keeps moving after one key is released
+
+def test_left_right_keys(window: arcade.Window) -> None:
+    view = GameView()
+    window.show_view(view)
+    
     view.on_key_press(arcade.key.RIGHT, 0)
+    window.test(15)
+    view.on_key_press(arcade.key.LEFT, 0)
+    view.on_key_release(arcade.key.RIGHT, 0)
+    x = view.player_sprite.position
+    window.test(15)
 
-    # Let the game run for 1 second
-    window.test(60)
+    assert(x != view.player_sprite.position)
+    
 
-    # We should have collected the first coin
-    assert len(view.coin_list) == INITIAL_COIN_COUNT - 1
+# test que la topuche echap pour reset le jeu fonctionne bien
 
-    # Jump to get past the first crate
-    view.on_key_press(arcade.key.UP, 0)
-    view.on_key_release(arcade.key.UP, 0)
+def test_reset_with_escape(window: arcade.Window) -> None:
+    view = GameView()
+    window.show_view(view)
 
-    # Let the game run for 1 more second
-    window.test(60)
+    # le joueur se déplace
+    view.player_sprite.center_x += 200
 
-    # We should have collected the second coin
-    assert len(view.coin_list) == INITIAL_COIN_COUNT - 2
+    # Appuyer sur ECHAP pour réinitialiser
+    view.on_key_press(arcade.key.ESCAPE, 0)
 
-    # test que la topuche echap pour reset le jeu fonctionne bien
+    # Vérifier que le joueur est revenu à sa position initiale
+    assert view.player_sprite.center_x == 64
+    assert view.player_sprite.center_y == 128
 
-    def test_reset_with_escape(window: arcade.Window) -> None:
-        view = GameView()
-        window.show_view(view)
-
-        # le joueur se déplace
-        view.player_sprite.center_x += 200
-
-        # Appuyer sur ECHAP pour réinitialiser
-        view.on_key_press(arcade.key.ESCAPE, 0)
-
-        # Vérifier que le joueur est revenu à sa position initiale
-        assert view.player_sprite.center_x == 64
-        assert view.player_sprite.center_y == 128
+    

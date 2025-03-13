@@ -1,13 +1,14 @@
 
 #Ouverture et lecture du fichier "map" pour ensuite la placer dans une matrice
-def lecture_map() -> list[list[str]]:
+def lecture_map(fichier : str) -> list[list[str]]:
     tableau = []
     try:
-        with open("maps/map1.txt", "r", encoding="utf-8", newline="\n") as f:
+        with open(fichier, "r", encoding="utf-8", newline="\n") as f:
             line = f.read()
     except OSError as e:
         print("Le fichier n'a pas pu être lu :")
         print(e)
+        return[]
 
     #On garde seulement le contenu de la map
     for element in line.splitlines():
@@ -18,10 +19,11 @@ def lecture_map() -> list[list[str]]:
     
     return tableau[3:-1]
 
+
 #Calcul des dimensions de la map
-def dim() -> tuple[int, int]:
+def dim(fichier : str) -> tuple[int, int]:
     try:
-        with open("maps/map1.txt", "r", encoding="utf-8", newline="\n") as f:
+        with open(fichier, "r", encoding="utf-8", newline="\n") as f:
             #largeur de la map
             width_line = f.readline().strip()
             if width_line.startswith("width:"):
@@ -50,8 +52,7 @@ class Map:
 
 
 #Ceci correspond à la map dans le jeu: initialisée dans gameview
-Map_game = Map(dim(), lecture_map())
-
+Map_game = Map(dim("maps/map1.txt"), lecture_map("maps/map1.txt"))
 
 
 
