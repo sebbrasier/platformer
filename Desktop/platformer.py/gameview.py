@@ -1,6 +1,7 @@
 import arcade
 from readmap import Map
 from readmap import Map_game
+import math
 
 
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
@@ -86,9 +87,12 @@ class GameView(arcade.View):
         self.sword.visible = False
         self.sword_list = arcade.SpriteList()
         self.sword_list.append(self.sword)
-        
 
-        self.sword_timer : float = 0.0
+        # declaration des variables utilisées pour l'épée
+        self.sword_angle: float = 0.0
+        self.sword_timer: float = 0.0
+        self.SWORD_RADIUS_X = 20
+        self.SWORD_RADIUS_Y = 30
 
         # Setup our game
         self.setup()
@@ -129,13 +133,48 @@ class GameView(arcade.View):
     key_right : bool = False
     key_left : bool = False
 
+    
+
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT :
             self.sword.visible = True
             self.sword_timer = 0.2
+
+            # Positionner l'épée en fonction de l'angle
+            self.update_sword_orientation(x,y)
             
     def on_mouse_release(self, x:int, y:int, button:int, modifiers:int) -> None :
             self.sword.visible = False
+
+    def update_sword_orientation(self,mouse_x: float, mouse_y: float) -> float:
+        """
+        Calcule la position et l'angle de l'épée pour que le manche reste fixé
+        vers le personnage et que le placement se fasse le long d'un ovale.
+        """
+        # Conversion des coordonnées de la souris (écran) en coordonnées du monde
+        world_x = mouse_x + self.camera.position[0] - (self.WINDOW_WIDTH / 2)
+        world_y = mouse_y + self.camera.position[1] - (self.WINDOW_HEIGHT / 2)
+        # Point de référence pour le personnage (on décale verticalement si besoin)
+        ref_x = self.player_sprite.center_x
+        ref_y = self.player_sprite.center_y   # ajustez ce décalage pour "baisser" le point de référence
+        # Calcul de l'angle entre le point de référence et le clic (en radians)
+        angle = math.atan2(ref_x - world_x,ref_y - world_y)
+        # Positionner l'épée pour que le point "handle" (après rotation) se retrouve exactement sur target
+        self.sword.center_x = ref_x + math.sin(angle+math.pi) * self.SWORD_RADIUS_X 
+        self.sword.center_y = ref_y + math.cos(angle+math.pi) * self.SWORD_RADIUS_Y - 20
+        # Appliquer la rotation à l'image (toujours +45° pour correspondre à l'orientation de l'image de base)
+        self.sword.angle = math.degrees(angle) + 135
+        return angle
+    
+    # fonction qui detecte si l'épée touche un blob
+
+    def check_sword_hit_monster(self)->None:
+        monsters_hit= []
+        if self.sword.visible == True:
+            monsters_hit = arcade.check_for_collision_with_list(self.sword,self.monster_list)
+            for monster in monsters_hit:
+                monster.remove_from_sprite_lists()
+        
             
          
 
@@ -245,6 +284,8 @@ class GameView(arcade.View):
         self.player_sprite.center_x += self.player_sprite.change_x
         self.physics_engine.update()
 
+        
+
         self.cam_control()
 
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
@@ -254,9 +295,8 @@ class GameView(arcade.View):
             arcade.play_sound(self.coin_sound)
 
 
-        self.sword.update()
-        self.sword.center_x = self.player_sprite.center_x + 25
-        self.sword.center_y = self.player_sprite.center_y - 5
+        self.check_sword_hit_monster()
+
         if self.sword_timer > 0:
             self.sword_timer -= delta_time
             if self.sword_timer <= 0:
