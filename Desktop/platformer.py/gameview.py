@@ -2,6 +2,7 @@ import arcade
 from readmap import Map
 from readmap import Map_game
 
+
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
 def char_to_sprite(char: str) -> tuple[str, str]:
      if char == " ":
@@ -24,8 +25,12 @@ def char_to_sprite(char: str) -> tuple[str, str]:
           raise Exception("Erreur: caractere inconnu")
      
 
+  
+     
+
 class GameView(arcade.View):
 
+    
     player_sprite : arcade.Sprite
     player_sprite_list : arcade.SpriteList[arcade.Sprite]
     wall_list : arcade.SpriteList[arcade.Sprite]
@@ -41,13 +46,17 @@ class GameView(arcade.View):
     #Taille d'un "carreau" de la grille définie dans readmap
     Grid_size = 64
 
+
+    
     # initialisation des variables pour le son 
 
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
     jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
     game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
+
    
     """Lateral speed of the player, in pixels per frame."""
+
     
     #Ranger les sprites dans la bonne liste selon son asset
     def sprite_type(self, type : str, sprite: arcade.Sprite) -> None:
@@ -71,6 +80,15 @@ class GameView(arcade.View):
 
         # Choose a nice comfy background color
         self.background_color = arcade.csscolor.CORNFLOWER_BLUE
+
+        # ajout de l'épée
+        self.sword = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7,)
+        self.sword.visible = False
+        self.sword_list = arcade.SpriteList()
+        self.sword_list.append(self.sword)
+        
+
+        self.sword_timer : float = 0.0
 
         # Setup our game
         self.setup()
@@ -110,6 +128,16 @@ class GameView(arcade.View):
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
     key_left : bool = False
+
+    def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
+        if arcade.MOUSE_BUTTON_LEFT :
+            self.sword.visible = True
+            self.sword_timer = 0.2
+            
+    def on_mouse_release(self, x:int, y:int, button:int, modifiers:int) -> None :
+            self.sword.visible = False
+            
+         
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
@@ -155,6 +183,7 @@ class GameView(arcade.View):
             self.coin_list.draw()
             self.monster_list.draw()
             self.no_go_list.draw()
+            self.sword_list.draw()
 
 
     #fonction de control de camera
@@ -223,6 +252,16 @@ class GameView(arcade.View):
             coin.remove_from_sprite_lists()
         #son
             arcade.play_sound(self.coin_sound)
+
+
+        self.sword.update()
+        self.sword.center_x = self.player_sprite.center_x + 25
+        self.sword.center_y = self.player_sprite.center_y - 5
+        if self.sword_timer > 0:
+            self.sword_timer -= delta_time
+            if self.sword_timer <= 0:
+                self.sword.visible = False
+            
         
 
         #position du blob
@@ -241,6 +280,7 @@ class GameView(arcade.View):
             self.setup()
         # son 
             arcade.play_sound(self.game_over_sound)
+    
              
 
 
