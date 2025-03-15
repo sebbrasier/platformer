@@ -17,11 +17,11 @@ def char_to_sprite(char: str) -> tuple[str, str]:
      if char == "*":
           return ("Coin", ":resources:/images/items/coinGold.png")
      if char == "o":
-          return ("Monster", ":resources:/images/enemies/slimeBlue.png")
+          return ("Monster", ":resources:/images/enemies/slimePurple.png")
      if char == "£":
           return ("No-go", ":resources:/images/tiles/lava.png")
      if char == "S":
-          return ("Player", ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png")
+          return ("Player", ":resources:/images/animated_characters/male_person/malePerson_idle.png")
      if char == "E":
           return ("Next_level", ":resources:/images/tiles/signExit.png")
      else:
@@ -55,6 +55,7 @@ class GameView(arcade.View):
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
     jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
     game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
+    hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
 
    
     """Lateral speed of the player, in pixels per frame."""
@@ -94,8 +95,6 @@ class GameView(arcade.View):
         # declaration des variables utilisées pour l'épée
         self.sword_angle: float = 0.0
         self.sword_timer: float = 0.0
-        self.SWORD_RADIUS_X = 20
-        self.SWORD_RADIUS_Y = 30
 
         # Setup our game
         self.setup()
@@ -148,7 +147,7 @@ class GameView(arcade.View):
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT :
             self.sword.visible = True
-            #self.sword_timer = 0.2
+            self.sword_timer = 0.2
 
             # Positionner l'épée en fonction de l'angle
             self.update_sword_orientation(x,y)
@@ -156,10 +155,10 @@ class GameView(arcade.View):
     def on_mouse_release(self, x:int, y:int, button:int, modifiers:int) -> None :
             self.sword.visible = False
 
-    def update_sword_orientation(self,mouse_x: float, mouse_y: float) -> float:
+    def update_sword_orientation(self,mouse_x: float, mouse_y: float) -> None:
         """
         Calcule la position et l'angle de l'épée pour que le manche reste fixé
-        vers le personnage et que le placement se fasse le long d'un ovale.
+        vers le personnage et que le placement se fasse le long d'un cercle.
         """
         # Conversion des coordonnées de la souris (écran) en coordonnées du monde
         world_x = mouse_x + self.camera.position[0] - (self.WINDOW_WIDTH / 2)
@@ -171,7 +170,6 @@ class GameView(arcade.View):
         angle = math.atan2(ref_x - world_x,ref_y - world_y)
         # Appliquer la rotation à l'image (toujours +45° pour correspondre à l'orientation de l'image de base)
         self.sword.angle = math.degrees(angle) + 135
-        return angle
     
     def update_sword_position(self) -> None:
          
@@ -188,6 +186,7 @@ class GameView(arcade.View):
             monsters_hit = arcade.check_for_collision_with_list(self.sword,self.monster_list)
             for monster in monsters_hit:
                 monster.remove_from_sprite_lists()
+                arcade.play_sound(self.hit_sound)
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
