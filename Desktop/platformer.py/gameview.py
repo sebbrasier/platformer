@@ -1,7 +1,14 @@
 import arcade
-from readmap import Map
 from readmap import *
 import math
+
+class score:
+    points: int
+    def __init__(self, points : int) -> None:
+        self.points = points
+    @property
+    def erase(self) -> None:
+        self.points = 0
 
 
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
@@ -26,6 +33,8 @@ def char_to_sprite(char: str) -> tuple[str, str]:
           return ("Next_level", ":resources:/images/tiles/signExit.png")
      else:
           raise Exception("Erreur: caractere inconnu")
+
+
      
 class GameView(arcade.View):
 
@@ -43,13 +52,15 @@ class GameView(arcade.View):
     m_speed : list[int]
     m_speed = [] 
     camera: arcade.camera.Camera2D
+    UI_camera : arcade.camera.Camera2D
     WINDOW_WIDTH = 1280
     WINDOW_HEIGHT = 720
     #Taille d'un "carreau" de la grille définie dans readmap
     Grid_size = 64
 
+    #Rajout du score
+    coin_score = score(0)
 
-    
     # initialisation des variables pour le son 
 
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
@@ -136,13 +147,12 @@ class GameView(arcade.View):
             gravity_constant=PLAYER_GRAVITY,
         )
         self.camera = arcade.camera.Camera2D()
+        self.UI_camera = arcade.camera.Camera2D()
         
 
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
     key_left : bool = False
-
-    
 
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT :
@@ -234,6 +244,9 @@ class GameView(arcade.View):
             self.no_go_list.draw()
             self.sword_list.draw()
             self.next_level_list.draw()
+            
+        with self.UI_camera.activate():
+            arcade.draw_text(f"SCORE: {self.coin_score.points}", 900, 500, arcade.color.WHITE, 20)
 
 
     #fonction de control de camera
@@ -290,6 +303,16 @@ class GameView(arcade.View):
              return True
         return False
     
+    def game_over(self, danger : arcade.sprite_list) -> None:
+        hit = arcade.check_for_collision_with_list(self.player_sprite, danger)
+        for elements in hit:
+            All_maps.index = 0
+            self.setup()
+            self.coin_score.erase
+        # son 
+            arcade.play_sound(self.game_over_sound)
+            
+    
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
         self.player_sprite.center_x += self.player_sprite.change_x
@@ -301,6 +324,7 @@ class GameView(arcade.View):
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
+            self.coin_score.points += 1
         #son
             arcade.play_sound(self.coin_sound)
 
@@ -317,19 +341,10 @@ class GameView(arcade.View):
         #position du blob
         self.blob_position()
 
-        # game over si le joueur entre en collsion avec la lave
-        lava_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.no_go_list)
-        for lava in lava_hit:
-            self.setup()
-        # son 
-            arcade.play_sound(self.game_over_sound)
-
-        # game over si le joueur entre en collision un monstre
-        monster_hit =  arcade.check_for_collision_with_list(self.player_sprite, self.monster_list)
-        for monster in monster_hit:
-            self.setup()
-        # son 
-            arcade.play_sound(self.game_over_sound)
+        #Detection de la collision avec la lave et les blobs:
+        self.game_over(self.no_go_list)
+        self.game_over(self.monster_list)
+        
     
              
 
