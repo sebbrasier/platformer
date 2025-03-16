@@ -61,6 +61,9 @@ class GameView(arcade.View):
     #Rajout du score
     coin_score = score(0)
 
+    #Chargement des polices
+    arcade.resources.load_kenney_fonts()
+
     # initialisation des variables pour le son 
 
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
@@ -170,15 +173,11 @@ class GameView(arcade.View):
         Calcule la position et l'angle de l'épée pour que le manche reste fixé
         vers le personnage et que le placement se fasse le long d'un cercle.
         """
-        # Conversion des coordonnées de la souris (écran) en coordonnées du monde
         world_x = mouse_x + self.camera.position[0] - (self.WINDOW_WIDTH / 2)
         world_y = mouse_y + self.camera.position[1] - (self.WINDOW_HEIGHT / 2)
-        # Point de référence pour le personnage (on décale verticalement si besoin)
         ref_x = self.player_sprite.center_x
-        ref_y = self.player_sprite.center_y   # ajustez ce décalage pour "baisser" le point de référence
-        # Calcul de l'angle entre le point de référence et le clic (en radians)
+        ref_y = self.player_sprite.center_y   
         angle = math.atan2(ref_x - world_x,ref_y - world_y)
-        # Appliquer la rotation à l'image (toujours +45° pour correspondre à l'orientation de l'image de base)
         self.sword.angle = math.degrees(angle) + 135
     
     def update_sword_position(self) -> None:
@@ -221,6 +220,7 @@ class GameView(arcade.View):
                 arcade.play_sound(self.jump_sound)
 
         if key == arcade.key.ESCAPE:
+                All_maps.index = 0
                 self.setup()
 
     def on_key_release(self, key: int, modifiers: int) -> None:
@@ -246,7 +246,7 @@ class GameView(arcade.View):
             self.next_level_list.draw()
             
         with self.UI_camera.activate():
-            arcade.draw_text(f"SCORE: {self.coin_score.points}", 900, 500, arcade.color.WHITE, 20)
+            arcade.draw_text(f"SCORE: {self.coin_score.points}", 10,650, arcade.color.WHITE, 20,font_name="Kenney Future")
 
 
     #fonction de control de camera

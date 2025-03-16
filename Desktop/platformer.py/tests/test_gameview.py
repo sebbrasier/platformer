@@ -5,6 +5,7 @@ from gameview import GameView
 from readmap import Map_game
 from readmap import lecture_map
 from readmap import dim
+from readmap import All_maps
 
 #test ouverture du fichier map
 def test_map() -> None:
@@ -102,7 +103,7 @@ def test_left_right_keys(window: arcade.Window) -> None:
     assert(x != view.player_sprite.position)
     
 
-# test que la topuche echap pour reset le jeu fonctionne bien
+# test que la touche echap pour reset le jeu fonctionne bien
 
 def test_reset_with_escape(window: arcade.Window) -> None:
     view = GameView()
@@ -118,4 +119,88 @@ def test_reset_with_escape(window: arcade.Window) -> None:
     assert view.player_sprite.center_x == 64
     assert view.player_sprite.center_y == 128
 
+def test_sword_hits_blob(window: arcade.Window) -> None:
+    """
+    Test que l'épée tue bien les blobs lorsqu'elle entre en collision.
+    """
+    view = GameView()
+    window.show_view(view)
     
+    # Créer un blob et le placer à la même position que le joueur.
+    blob = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
+    blob.center_x = view.player_sprite.center_x
+    blob.center_y = view.player_sprite.center_y
+    view.monster_list.append(blob)
+    view.m_speed.append(-1)
+    
+    # Rendre l'épée visible et la positionner sur le blob.
+    view.sword.visible = True
+    view.sword.center_x = blob.center_x
+    view.sword.center_y = blob.center_y
+    
+    # Vérifier que la collision supprime le blob
+    view.check_sword_hit_monster()
+    assert blob not in view.monster_list
+
+
+def test_score_reset_after_game_over(window: arcade.Window) -> None:
+    """
+    Test que le score se réinitialise après un game over.
+    """
+    view = GameView()
+    window.show_view(view)
+    
+    # Donner un score non nul
+    view.coin_score.points = 10
+    
+    # Créer de la lave au même endroit que le joueur
+    danger = arcade.Sprite(":resources:/images/tiles/lava.png", scale=0.5)
+    danger.center_x = view.player_sprite.center_x
+    danger.center_y = view.player_sprite.center_y
+    view.no_go_list.append(danger)
+    
+    view.game_over(view.no_go_list)
+    
+    # Vérifier que le score est remis à zéro et que la map est réinitialisée 
+    assert view.coin_score.points == 0
+    assert All_maps.index == 0
+
+
+def test_sword_appears_on_click(window: arcade.Window) -> None:
+    """
+    Test que l'épée apparaît bien lors d'un clic de souris.
+    """
+    view = GameView()
+    window.show_view(view)
+    
+    # S'assurer que l'épée est initialement invisible.
+    view.sword.visible = False
+    
+    # Simuler un clic gauche de souris à des coordonnées arbitraires 
+    view.on_mouse_press(150, 150, arcade.MOUSE_BUTTON_LEFT, 0)
+    
+    # Vérifier que l'épée est visible
+    assert view.sword.visible
+    window.test(5)
+
+
+def test_map_transition(window: arcade.Window) -> None:
+    """
+    Test que la collision avec le panneau de sortie (exit panel) fait passer de la map 1 à la map 2.
+    """
+    # Forcer l'index de la map à 0 pour démarrer sur map 1
+    All_maps.index = 0
+    
+    view = GameView()
+    window.show_view(view)
+    
+    # Créer un sprite de panneau de sortie et le placer sur le joueur
+    exit_panel = arcade.Sprite(":resources:/images/tiles/signExit.png", scale=0.5)
+    exit_panel.center_x = view.player_sprite.center_x
+    exit_panel.center_y = view.player_sprite.center_y
+    view.next_level_list.append(exit_panel)
+    
+    # Vérifier que la collision avec le panneau incrémente bien l'index de la map
+    view.check_for_next_level()
+    assert All_maps.index == 1
+    window.test(5)

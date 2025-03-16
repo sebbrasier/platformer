@@ -2,27 +2,9 @@
 
 ## Progression
 
-Format :
-
-    * [fait/à faire] Tâche      Durée (en minutes; remplacer les ??)
-
-Ajoutez au fur et à mesure les tâches qui seront demandées chaque semaine.
-Vous pouvez ajouter vos propres tâches si vous le jugez utile (p.ex. avec une décomposition plus fine).
-
-
-
-
----
 
 ## À faire (prochaine étape)
 
-Mettez ici ce que vous pensez devoir être la ou les 2 prochaines étapes pour chacune/chacun.
-Par exemple :
-
-* Ron : meilleure gestion du clavier
-* Hermione: finir le reste du projet
-
----
 
 ## Suivi
 
@@ -42,7 +24,13 @@ Par exemple :
 * [x] mise en mouvement des blobs  
 
 ### Semaine 4
-
+* [x] ajout du score                                           
+* [x] ajout d'une deuxieme map pour un deuxième niveau                                           
+* [x] ajout de l'épée
+* [x] ajout d'une fonction pour l'orientation de l'épée                                           
+* [x] changement des endroits de respawn lors du game over
+* [x] ajout du son quand on tue un blob                                          
+                                            
 ### Semaine 5
 
 ### Semaine 6
