@@ -1,7 +1,15 @@
 import arcade
 from readmap import *
 import math
+from typing import Final
 
+#Variables globales
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
+#Taille d'un "carreau" de la grille définie dans readmap
+Grid_size = 64
+
+#classe pour compter le score
 class score:
     points: int
     def __init__(self, points : int) -> None:
@@ -9,6 +17,27 @@ class score:
     @property
     def erase(self) -> None:
         self.points = 0
+
+
+#Les deux classes si-dessous permettent de mieux gérer le déplacement de chaque monstre
+class monster:
+    type: arcade.Sprite
+    speed : int
+
+    def __init__(self, type : arcade.Sprite, speed : int) -> None:
+        self.type = type
+        self.speed = speed
+        
+
+class monster_table:
+     monsters : list[monster]
+
+     def __init__(self, monsters : list[monster]) -> None:
+          self.monsters = monsters
+
+     def __getitem__(self, i: int) -> monster:
+          return self.monsters[i]
+    
 
 
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
@@ -38,7 +67,7 @@ def char_to_sprite(char: str) -> tuple[str, str]:
      
 class GameView(arcade.View):
 
-    #Liste pour les objets situés à la fin du niveau
+    #Initialisation de toutes les listes
     next_level_list : arcade.SpriteList[arcade.Sprite]
     
     player_sprite : arcade.Sprite
@@ -48,15 +77,20 @@ class GameView(arcade.View):
     coin_list : arcade.SpriteList[arcade.Sprite]
     no_go_list : arcade.SpriteList[arcade.Sprite]
     monster_list : arcade.SpriteList[arcade.Sprite]
-    #variable qui va stocker les vitesses de chaque monstre
-    m_speed : list[int]
-    m_speed = [] 
+
+    #Cette liste va permettre de ranger les instances de la class "monster"
+    monster_TABLE = monster_table([])
+
+    # ajout de l'épée
+    sword = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7,)
+    sword.visible = False
+    sword_list = arcade.SpriteList()
+    sword_list.append(sword)
+
+    #UI elements
     camera: arcade.camera.Camera2D
     UI_camera : arcade.camera.Camera2D
-    WINDOW_WIDTH = 1280
-    WINDOW_HEIGHT = 720
-    #Taille d'un "carreau" de la grille définie dans readmap
-    Grid_size = 64
+    
 
     #Rajout du score
     coin_score = score(0)
@@ -82,7 +116,9 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Monster":
             self.monster_list.append(sprite)
-            self.m_speed.append(-1)
+            monsters = monster(sprite, -1)
+            self.monster_TABLE.monsters.append(monsters)
+
         if type == "No-go":
             self.no_go_list.append(sprite)
         if type == "Player":
@@ -100,12 +136,6 @@ class GameView(arcade.View):
         # Choose a nice comfy background color
         self.background_color = arcade.csscolor.CORNFLOWER_BLUE
 
-        # ajout de l'épée
-        self.sword = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7,)
-        self.sword.visible = False
-        self.sword_list = arcade.SpriteList()
-        self.sword_list.append(self.sword)
-
         # declaration des variables utilisées pour l'épée
         self.sword_angle: float = 0.0
         self.sword_timer: float = 0.0
@@ -121,7 +151,6 @@ class GameView(arcade.View):
 
     def setup(self) -> None:
         """Set up the game here."""
-        self.m_speed = []
         PLAYER_GRAVITY = 1
 
         #Initialiser les listes d'objets
@@ -138,8 +167,8 @@ class GameView(arcade.View):
                 sprite = MAP[i][j] 
                 if char_to_sprite(sprite) != (" ", " "):
                     asset = arcade.Sprite(char_to_sprite(sprite)[1],
-                        center_y = (len(MAP) - i) * self.Grid_size,
-                        center_x = j * self.Grid_size,
+                        center_y = (len(MAP) - i) * Grid_size,
+                        center_x = j * Grid_size,
                         scale = 0.5
                     )
                     self.sprite_type(char_to_sprite(sprite)[0], asset)
@@ -173,8 +202,8 @@ class GameView(arcade.View):
         Calcule la position et l'angle de l'épée pour que le manche reste fixé
         vers le personnage et que le placement se fasse le long d'un cercle.
         """
-        world_x = mouse_x + self.camera.position[0] - (self.WINDOW_WIDTH / 2)
-        world_y = mouse_y + self.camera.position[1] - (self.WINDOW_HEIGHT / 2)
+        world_x = mouse_x + self.camera.position[0] - (WINDOW_WIDTH / 2)
+        world_y = mouse_y + self.camera.position[1] - (WINDOW_HEIGHT / 2)
         ref_x = self.player_sprite.center_x
         ref_y = self.player_sprite.center_y   
         angle = math.atan2(ref_x - world_x,ref_y - world_y)
@@ -220,7 +249,6 @@ class GameView(arcade.View):
                 arcade.play_sound(self.jump_sound)
 
         if key == arcade.key.ESCAPE:
-                All_maps.index = 0
                 self.setup()
 
     def on_key_release(self, key: int, modifiers: int) -> None:
@@ -254,10 +282,10 @@ class GameView(arcade.View):
          player_x = self.player_sprite.center_x
          player_y = self.player_sprite.center_y
          #Calcule des "Bords" de la caméra:
-         right_edge = self.camera.position[0] + (self.WINDOW_WIDTH / 2) - 410
-         left_edge = self.camera.position[0] - (self.WINDOW_WIDTH / 2) + 410
-         upper_edge = self.camera.position[1] + (self.WINDOW_HEIGHT / 2) - 300
-         down_edge = self.camera.position[1] - (self.WINDOW_HEIGHT / 2) + 250
+         right_edge = self.camera.position[0] + (WINDOW_WIDTH / 2) - 410
+         left_edge = self.camera.position[0] - (WINDOW_WIDTH / 2) + 410
+         upper_edge = self.camera.position[1] + (WINDOW_HEIGHT / 2) - 300
+         down_edge = self.camera.position[1] - (WINDOW_HEIGHT / 2) + 250
 
         #La caméra se déplace avec le joueur
          if player_x >= right_edge:
@@ -271,21 +299,19 @@ class GameView(arcade.View):
 
     #Fonction qui déplace le blob
     def blob_position(self) -> None:
-         i = 0
-         for blob in self.monster_list:
-            collision = self.blob_collision(blob, self.m_speed[i])
+         for blob in self.monster_TABLE.monsters:
+            collision = self.blob_collision(blob.type, blob.speed)
             if collision == True:
                  #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
-                 self.m_speed[i] *= -1
-                 blob.scale_x *= -1
-            blob.change_x = self.m_speed[i]
-            i += 1
+                 blob.speed *= -1
+                 blob.type.scale_x *= -1
+            blob.type.change_x = blob.speed
          self.monster_list.update()
     
     #Fonction qui détecte les collisions
     def blob_collision(self, blob: arcade.Sprite, change_x : int) -> bool:
         #point en dessous du blob pour les collision sur les bords
-        point_y = blob.bottom - (self.Grid_size / 2)
+        point_y = blob.bottom - (Grid_size / 2)
         if change_x == -1:
              point_x = blob.left
         else:

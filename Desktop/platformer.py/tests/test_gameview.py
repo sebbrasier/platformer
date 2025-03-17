@@ -1,11 +1,9 @@
 import arcade
 
-from gameview import GameView
-
+from gameview import *
+from readmap import *
 from readmap import Map_game
-from readmap import lecture_map
-from readmap import dim
-from readmap import All_maps
+
 
 #test ouverture du fichier map
 def test_map() -> None:
@@ -24,21 +22,21 @@ def test_map() -> None:
 def test_blob(window: arcade.Window) -> None:
     view = GameView()
     window.show_view(view)
-    monster_list = view.monster_list
+    monster_TABLE = view.monster_TABLE.monsters
     window.test(30)
     i = 0
     #Vérifie que les premières secondes, le blob collisionne avec rien
-    for monster in monster_list:
-        change_x = view.m_speed[i]
-        assert view.blob_collision(monster, change_x) == False
+    for monster in monster_TABLE:
+        change_x = monster.speed
+        assert view.blob_collision(monster.type, change_x) == False
         i += 1
     window.test(15)
     #Vérifie que le blob change de diréction apres collision
     for i in range(60):
-        monst = view.monster_list[0]
-        if (view.blob_collision(monst, view.m_speed[0]) == True):
-            assert view.m_speed[0] == -1
-            assert monst.scale_x == 0.5
+        monst = view.monster_TABLE[0]
+        if (view.blob_collision(monst.type, monst.speed) == True):
+            assert monst.speed == -1
+            assert monst.type.scale_x == 0.5
         window.test(1)
 
     
