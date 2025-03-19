@@ -64,7 +64,6 @@ def char_to_sprite(char: str) -> tuple[str, str]:
           raise Exception("Erreur: caractere inconnu")
 
 
-     
 class GameView(arcade.View):
 
     #Initialisation de toutes les listes
@@ -189,7 +188,7 @@ class GameView(arcade.View):
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT :
             self.sword.visible = True
-            self.sword_timer = 0.2
+            #self.sword_timer = 0.2
 
             # Positionner l'épée en fonction de l'angle
             self.update_sword_orientation(x,y)

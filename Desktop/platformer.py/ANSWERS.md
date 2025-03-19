@@ -20,7 +20,7 @@ On a créé la fonction update_sword_orientation pour l'orientation de l'épée 
 On utilise ces formules pour obtenir les coordonnées de la souris dans le monde : world_x = mouse_x + self.camera.position[0] - (self.WINDOW_WIDTH / 2) et world_y = mouse_y + self.camera.position[1] - (self.WINDOW_HEIGHT / 2).
 
 Comment testez-vous l’épée ? Comment testez-vous que son orientation est importante pour déterminer si elle touche un monstre ?
-
+On teste qu'elle apparait 
 
 Comment transférez-vous le score de la joueuse d’un niveau à l’autre ?
 Le score est stocké dans score qui se réinitialise seulement lors d'un game over.

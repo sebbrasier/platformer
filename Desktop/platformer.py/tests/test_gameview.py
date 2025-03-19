@@ -76,7 +76,7 @@ def test_camera(window: arcade.Window) -> None:
     window.show_view(view)
 
     cam_i = view.camera.position[0]
-    left_edge = cam_i - (view.WINDOW_WIDTH / 2) + 410
+    left_edge = cam_i - (WINDOW_WIDTH / 2) + 410
     view.on_key_press(arcade.key.LEFT, 0)
     window.test(10)
     view.on_key_release(arcade.key.LEFT, 0)
@@ -129,7 +129,7 @@ def test_sword_hits_blob(window: arcade.Window) -> None:
     blob.center_x = view.player_sprite.center_x
     blob.center_y = view.player_sprite.center_y
     view.monster_list.append(blob)
-    view.m_speed.append(-1)
+    view.monster_TABLE.monsters.append(monster(blob, -1))
     
     # Rendre l'épée visible et la positionner sur le blob.
     view.sword.visible = True

@@ -85,9 +85,11 @@ Map_game = Map(dim("maps/map1.txt"), lecture_map("maps/map1.txt"))
 Map_game2 = Map(dim("maps/map2.txt"), lecture_map("maps/map2.txt"))
 Map_game3 = Map(dim("maps/map3.txt"), lecture_map("maps/map3.txt"))
 
+
 All_maps.Maps.append(Map_game)
 All_maps.Maps.append(Map_game2)
 All_maps.Maps.append(Map_game3)
+
 
 
 
