@@ -2,12 +2,156 @@ import arcade
 from readmap import *
 import math
 from typing import Final
+from abc import ABC, abstractmethod
 
 #Variables globales
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 #Taille d'un "carreau" de la grille définie dans readmap
 Grid_size = 64
+#Initialisation du son
+hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
+
+#Créer une classe pour les armes
+class Weapon:
+    attribute : arcade.Sprite
+    player_sprite : arcade.Sprite
+    camera_position : tuple[float, float]
+
+    #Initialisation
+    def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
+        self.attribute = attribute
+        self.player_sprite = player_sprite
+        self.camera_position = camera_position
+
+    #Definit l'orientation "générale" des armes
+    def update_weapon_orientation(self, mouse_x: float, mouse_y: float) -> None:
+        """
+        Calcule la position et l'angle de l'arme pour que le manche reste fixé
+        vers le personnage et que le placement se fasse le long d'un cercle.
+        """
+        world_x = mouse_x + self.camera_position[0] - (WINDOW_WIDTH / 2)
+        world_y = mouse_y + self.camera_position[1] - (WINDOW_HEIGHT / 2)
+        ref_x = self.player_sprite.center_x
+        ref_y = self.player_sprite.center_y   
+        angle = math.atan2(ref_x - world_x,ref_y - world_y)
+        self.attribute.angle = math.degrees(angle) + 140
+    
+    #Définit la position (et non l'orientation) des armes à tout moment
+    @abstractmethod
+    def update_weapon_position(self) -> None:
+        ...
+        
+    
+    #Méthode qui va etre utile pour les fleches et l'épée
+    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
+        monsters_hit= []
+        if self.attribute.visible == True:
+            monsters_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
+            for monster in monsters_hit:
+                monster.remove_from_sprite_lists()
+                arcade.play_sound(hit_sound)
+
+#Class pour l'épée qui hérite de Weapon
+class Sword(Weapon):
+
+    def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
+        super().__init__(attribute, player_sprite, camera_position)
+    
+    #Fonction qui despawn un monstre dès qu'il est touché
+    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
+        monsters_hit= []
+        if self.attribute.visible == True:
+            monsters_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
+            for monster in monsters_hit:
+                monster.remove_from_sprite_lists()
+                arcade.play_sound(hit_sound)
+
+    def update_weapon_position(self) -> None:
+        weapon_r = math.radians(self.attribute.angle - 50)
+        vec = (25 * math.cos(weapon_r), 25 * math.sin(-weapon_r))
+        self.attribute.center_x = self.player_sprite.center_x + vec[0]
+        self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
+
+
+#Classe pour l'arc qui hérite de Weapon
+class Bow(Weapon):
+
+    def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
+        super().__init__(attribute, player_sprite, camera_position)
+    
+    #L'arc se comportant différamment de l'épée, on redéfinit l'orientation avec quelques constantes qui changent
+    def update_weapon_orientation(self, mouse_x: float, mouse_y: float) -> None:
+        """
+        Calcule la position et l'angle de l'arme pour que le manche reste fixé
+        vers le personnage et que le placement se fasse le long d'un cercle.
+        """
+        world_x = mouse_x + self.camera_position[0] - (WINDOW_WIDTH / 2)
+        world_y = mouse_y + self.camera_position[1] - (WINDOW_HEIGHT / 2)
+        ref_x = self.player_sprite.center_x
+        ref_y = self.player_sprite.center_y   
+        angle = math.atan2(ref_x - world_x,ref_y - world_y)
+        self.attribute.angle = math.degrees(angle) + 120
+
+    def update_weapon_position(self) -> None:
+        weapon_r = math.radians(self.attribute.angle - 50)
+        vec = (20 * math.cos(weapon_r), 20 * math.sin(-weapon_r))
+        self.attribute.center_x = self.player_sprite.center_x + vec[0]
+        self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
+    
+    #L'arc ne tue personne, c'est la flèche
+    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
+        pass
+
+
+class Arrow(Weapon):
+    #bool qui vérifie si l'on a le droit de tirer
+    Activated : bool
+
+    def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
+        super().__init__(attribute, player_sprite, camera_position)
+        self.Activated = False
+
+    #Fonction qui permet de tirer
+    def shoot(self, mouse_x: float, mouse_y: float) -> None:
+        if self.Activated == True:
+            self.attribute.position = self.player_sprite.position
+            self.update_weapon_orientation(mouse_x, mouse_y)
+            self.attribute.visible = True
+            weapon_r = math.radians(self.attribute.angle - 50)
+            vec = (25 * math.cos(weapon_r), 25 * math.sin(-weapon_r))
+            self.attribute.change_x = vec[0]
+            self.attribute.change_y = vec[1]
+
+    #Ici, on n'a pas besoin de suivre le personnage
+    def update_weapon_position(self) -> None:
+        pass
+
+    #Fonction qui détecte les collisions avec la flèche
+    def arrow_collision(self, no_go_list : arcade.SpriteList, monster_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> bool:
+        lava_hit = arcade.check_for_collision_with_list(self.attribute, no_go_list)
+        monster_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
+        wall_hit = arcade.check_for_collision_with_list(self.attribute, wall_list)
+        for lava in lava_hit:
+            return True
+        for monster in monster_hit:
+            return True
+        for wall in wall_hit:
+            return True
+        return False
+
+#Classe pour voir quelle arme est active:
+class Active_Weapon:
+    weapons : list[Weapon]
+    #index correspond à l'arme qui apparait à l'écran
+    index : int
+
+    def __init__(self, weapons : list[Weapon], index : int) -> None:
+        self.weapons = weapons
+        self.index = index
+    
+    def change_index(self, new_index : int) -> None:
+        self.index = new_index % len(self.weapons)
 
 #classe pour compter le score
 class score:
@@ -28,7 +172,7 @@ class monster:
         self.type = type
         self.speed = speed
         
-
+#Cette classe va permettre de ranger les monster avec leur vitesse
 class monster_table:
      monsters : list[monster]
 
@@ -37,7 +181,6 @@ class monster_table:
 
      def __getitem__(self, i: int) -> monster:
           return self.monsters[i]
-    
 
 
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
@@ -68,7 +211,6 @@ class GameView(arcade.View):
 
     #Initialisation de toutes les listes
     next_level_list : arcade.SpriteList[arcade.Sprite]
-    
     player_sprite : arcade.Sprite
     player_sprite_list : arcade.SpriteList[arcade.Sprite]
 
@@ -76,20 +218,22 @@ class GameView(arcade.View):
     coin_list : arcade.SpriteList[arcade.Sprite]
     no_go_list : arcade.SpriteList[arcade.Sprite]
     monster_list : arcade.SpriteList[arcade.Sprite]
+    weapon_icon_list : arcade.SpriteList[arcade.Sprite]
+    weapon_list = arcade.SpriteList() #type ignore
+
+    arrow_list : arcade.SpriteList[arcade.Sprite]
+    arrow_class_list : list[Arrow]
+    arrow_class_list = []
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     monster_TABLE = monster_table([])
 
-    # ajout de l'épée
-    sword = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7,)
-    sword.visible = False
-    sword_list = arcade.SpriteList()
-    sword_list.append(sword)
+    # declaration des variables utilisées pour l'épée
+    sword_timer: float = 0.0
 
     #UI elements
     camera: arcade.camera.Camera2D
     UI_camera : arcade.camera.Camera2D
-    
 
     #Rajout du score
     coin_score = score(0)
@@ -97,13 +241,29 @@ class GameView(arcade.View):
     #Chargement des polices
     arcade.resources.load_kenney_fonts()
 
-    # initialisation des variables pour le son 
+    #Allow change weapon
+    Allow_change_weapon = True
 
+    # initialisation des variables pour le son 
     coin_sound = arcade.load_sound(":resources:/sounds/coin4.wav")
     jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
     game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
     hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
 
+    # ajout des représentation des armes à gauch
+   
+    #ajoute des armes
+    sword = Sword(arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7), arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7), (0.0, 0.0))
+    bow = Bow(arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png",scale=0.5 * 0.7), arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png",scale=0.5 * 0.7), (0.0, 0.0))
+
+    weapon_list.append(sword.attribute)
+    weapon_list.append(bow.attribute)
+
+    sword.attribute.visible = False
+    bow.attribute.visible = False 
+    
+    #Active l'arme qui va apparaitre à l'écran
+    active_weapon = Active_Weapon([sword, bow], 0)
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -135,10 +295,6 @@ class GameView(arcade.View):
         # Choose a nice comfy background color
         self.background_color = arcade.csscolor.CORNFLOWER_BLUE
 
-        # declaration des variables utilisées pour l'épée
-        self.sword_angle: float = 0.0
-        self.sword_timer: float = 0.0
-
         # Setup our game
         self.setup()
     
@@ -154,10 +310,13 @@ class GameView(arcade.View):
 
         #Initialiser les listes d'objets
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+        self.weapon_icon_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList(use_spatial_hash=True)
         self.no_go_list = arcade.SpriteList(use_spatial_hash=True)
         self.monster_list = arcade.SpriteList(use_spatial_hash=True)
         self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
+        self.arrow_list = arcade.SpriteList()
+        self.arrow_class_list = []
         
         MAP = All_maps.Maps[All_maps.index]
         #Création de la map
@@ -177,53 +336,56 @@ class GameView(arcade.View):
             walls = self.wall_list,
             gravity_constant=PLAYER_GRAVITY,
         )
+        #initialisation de la caméra
         self.camera = arcade.camera.Camera2D()
         self.UI_camera = arcade.camera.Camera2D()
-        
+        #initialisation des armes
+        self.sword = Sword(arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7), self.player_sprite, self.camera.position)
+        self.bow = Bow(arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png",scale=0.5 * 0.7), self.player_sprite, self.camera.position)
 
+        #Initialisation de l'icone des armes
+        self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
+        self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
+        self.sword_repr.visible = True
+        self.bow_repr.visible = False
+
+        #Initialisation 
+        self.weapon_icon_list.append(self.sword_repr)
+        self.weapon_icon_list.append(self.bow_repr)
+        
+        
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
     key_left : bool = False
 
+    #Fonction qui "crée" une flèche
+    def create_arrow(self) -> arcade.Sprite:
+        arrow = arcade.Sprite("assets/kenney-voxel-items-png/arrow.png",scale=0.3)
+        arrow.visible = False
+        self.arrow_list.append(arrow)
+        return arrow
+    
+
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
-        if arcade.MOUSE_BUTTON_LEFT :
-            self.sword.visible = True
+        if arcade.MOUSE_BUTTON_LEFT:
+            weapon : Weapon
+            weapon = self.active_weapon.weapons[self.active_weapon.index]
             #self.sword_timer = 0.2
+            if self.active_weapon.index == 1:
+                self.Allow_change_weapon = False
+                arrow = Arrow(self.create_arrow(), self.player_sprite, self.camera.position)
+                arrow.Activated = True
+                arrow.shoot(x, y)
+                self.arrow_class_list.append(arrow)
 
             # Positionner l'épée en fonction de l'angle
-            self.update_sword_orientation(x,y)
+            weapon.update_weapon_orientation(x,y)
+            weapon.attribute.visible = True
             
     def on_mouse_release(self, x:int, y:int, button:int, modifiers:int) -> None :
-            self.sword.visible = False
-
-    def update_sword_orientation(self,mouse_x: float, mouse_y: float) -> None:
-        """
-        Calcule la position et l'angle de l'épée pour que le manche reste fixé
-        vers le personnage et que le placement se fasse le long d'un cercle.
-        """
-        world_x = mouse_x + self.camera.position[0] - (WINDOW_WIDTH / 2)
-        world_y = mouse_y + self.camera.position[1] - (WINDOW_HEIGHT / 2)
-        ref_x = self.player_sprite.center_x
-        ref_y = self.player_sprite.center_y   
-        angle = math.atan2(ref_x - world_x,ref_y - world_y)
-        self.sword.angle = math.degrees(angle) + 135
-    
-    def update_sword_position(self) -> None:
-         
-        sword_r = math.radians(self.sword.angle - 45)
-        vec = (30 * math.cos(sword_r), 30 * math.sin(-sword_r))
-        self.sword.center_x = self.player_sprite.center_x + vec[0]
-        self.sword.center_y = self.player_sprite.center_y + vec[1]
-    
-    # fonction qui detecte si l'épée touche un blob
-
-    def check_sword_hit_monster(self)->None:
-        monsters_hit= []
-        if self.sword.visible == True:
-            monsters_hit = arcade.check_for_collision_with_list(self.sword,self.monster_list)
-            for monster in monsters_hit:
-                monster.remove_from_sprite_lists()
-                arcade.play_sound(self.hit_sound)
+            weapon = self.active_weapon.weapons[self.active_weapon.index]
+            weapon.attribute.visible = False
+            self.Allow_change_weapon = True
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
@@ -231,24 +393,33 @@ class GameView(arcade.View):
         PLAYER_JUMP_SPEED = 18
         
         if key == arcade.key.RIGHT:
-                # start moving to the right
-                self.player_sprite.change_x = + PLAYER_MOVEMENT_SPEED
-                self.key_right = True
+            # start moving to the right
+            self.player_sprite.change_x = + PLAYER_MOVEMENT_SPEED
+            self.key_right = True
     
         if key == arcade.key.LEFT:
-                # start moving to the left
-                self.player_sprite.change_x = - PLAYER_MOVEMENT_SPEED
-                self.key_left = True
+            # start moving to the left
+            self.player_sprite.change_x = - PLAYER_MOVEMENT_SPEED
+            self.key_left = True
 
         if key == arcade.key.UP and self.physics_engine.can_jump(): 
-                # start moving to the left
-                self.player_sprite.change_y = PLAYER_JUMP_SPEED
+            # start moving to the left
+            self.player_sprite.change_y = PLAYER_JUMP_SPEED
 
-                #son
-                arcade.play_sound(self.jump_sound)
+            #son
+            arcade.play_sound(self.jump_sound)
 
         if key == arcade.key.ESCAPE:
-                self.setup()
+            self.setup()
+
+        #change weapon
+        if key == arcade.key.P and self.Allow_change_weapon == True:
+            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
+            weapon_repr.visible = False
+            self.active_weapon.change_index(self.active_weapon.index + 1)
+            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
+            weapon_repr.visible = True
+            
 
     def on_key_release(self, key: int, modifiers: int) -> None:
         """Called when the user releases a key on the keyboard."""
@@ -269,11 +440,13 @@ class GameView(arcade.View):
             self.coin_list.draw()
             self.monster_list.draw()
             self.no_go_list.draw()
-            self.sword_list.draw()
+            self.weapon_list.draw()
             self.next_level_list.draw()
+            self.arrow_list.draw()
             
         with self.UI_camera.activate():
             arcade.draw_text(f"SCORE: {self.coin_score.points}", 10,650, arcade.color.WHITE, 20,font_name="Kenney Future")
+            self.weapon_icon_list.draw()
 
 
     #fonction de control de camera
@@ -337,7 +510,6 @@ class GameView(arcade.View):
         # son 
             arcade.play_sound(self.game_over_sound)
             
-    
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
         self.player_sprite.center_x += self.player_sprite.change_x
@@ -346,6 +518,7 @@ class GameView(arcade.View):
         self.check_for_next_level()
         self.cam_control()
 
+
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
@@ -353,16 +526,31 @@ class GameView(arcade.View):
         #son
             arcade.play_sound(self.coin_sound)
 
-        #update position de l'épée 
-        self.update_sword_position()
+        #update position de l'arme sur l'écran
+        weapon = self.active_weapon.weapons[self.active_weapon.index]
+        weapon.camera_position = self.camera.position
+        weapon.player_sprite = self.player_sprite
+        weapon.update_weapon_position()
 
         #check si l'épée touche un monstre
-        self.check_sword_hit_monster()
+        weapon.check_hit_monsters(self.monster_list)
         if self.sword_timer > 0:
             self.sword_timer -= delta_time
             if self.sword_timer <= 0:
-                self.sword.visible = False
+                self.sword.attribute.visible = False
+        
+        #Update position des flèches:
+        for arrow in self.arrow_list:
+            arrow.change_y -= 1.5
+        self.arrow_list.update()
 
+        #Check si les flèches touchent les monstres
+        for arrows in self.arrow_class_list:
+            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list) is True:
+                self.arrow_class_list.remove(arrows)
+                self.arrow_list.remove(arrows.attribute)
+            arrows.check_hit_monsters(self.monster_list)
+            
         #position du blob
         self.blob_position()
 

@@ -10,7 +10,7 @@ from gameview import GameView
 def main() -> None:
     """Main function."""
 
-    # Create the (unique) Window, setup our GameView, and launch
+    # Create the (unique) Window, setup our GameView, and launchs
     window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     game_view = GameView()
     window.show_view(game_view)
