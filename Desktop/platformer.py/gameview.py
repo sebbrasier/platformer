@@ -41,7 +41,6 @@ class Weapon:
     @abstractmethod
     def update_weapon_position(self) -> None:
         ...
-        
     
     #Méthode qui va etre utile pour les fleches et l'épée
     def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
@@ -57,15 +56,6 @@ class Sword(Weapon):
 
     def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
         super().__init__(attribute, player_sprite, camera_position)
-    
-    #Fonction qui despawn un monstre dès qu'il est touché
-    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
-        monsters_hit= []
-        if self.attribute.visible == True:
-            monsters_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
-            for monster in monsters_hit:
-                monster.remove_from_sprite_lists()
-                arcade.play_sound(hit_sound)
 
     def update_weapon_position(self) -> None:
         weapon_r = math.radians(self.attribute.angle - 50)
@@ -166,11 +156,51 @@ class score:
 #Les deux classes si-dessous permettent de mieux gérer le déplacement de chaque monstre
 class monster:
     type: arcade.Sprite
-    speed : int
 
-    def __init__(self, type : arcade.Sprite, speed : int) -> None:
+    def __init__(self, type : arcade.Sprite) -> None:
         self.type = type
+    
+    @abstractmethod
+    def monster_position(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> None:
+        ...
+
+class blob(monster):
+    speed : int
+    def __init__(self, type : arcade.Sprite, speed : int) -> None:
+        super().__init__(type)
         self.speed = speed
+    
+    
+    def monster_collision(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> bool:
+        #point en dessous du blob pour les collision sur les bords
+        blob = self.type
+        change_x = self.speed
+        point_y = blob.bottom - (Grid_size / 2)
+        if change_x == -1:
+             point_x = blob.left
+        else:
+             point_x = blob.right
+        point = (point_x, point_y)
+        #detecte les collisions entre le point et l'air, lave et murs
+        collided_lava = arcade.get_sprites_at_point(point, no_go_list)
+        collided_box = arcade.get_sprites_at_point((point_x, blob.center_y), wall_list)
+        collided_air = arcade.get_sprites_at_point(point, wall_list)
+        if collided_air == []:
+             return True
+        for lava in collided_lava:
+             return True
+        for box in collided_box:
+             return True
+        return False
+    
+    #Fonction qui déplace le blob
+    def monster_position(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> None:
+        collision = self.monster_collision(no_go_list, wall_list)
+        if collision is True:
+                #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
+                self.speed *= -1
+                self.type.scale_x *= -1
+        self.type.change_x = self.speed
         
 #Cette classe va permettre de ranger les monster avec leur vitesse
 class monster_table:
@@ -226,7 +256,7 @@ class GameView(arcade.View):
     arrow_class_list = []
 
     #Cette liste va permettre de ranger les instances de la class "monster"
-    monster_TABLE = monster_table([])
+    blob_TABLE = monster_table([])
 
     # declaration des variables utilisées pour l'épée
     sword_timer: float = 0.0
@@ -249,21 +279,18 @@ class GameView(arcade.View):
     jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
     game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
     hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
-
-    # ajout des représentation des armes à gauch
    
-    #ajoute des armes
+    #ajout des armes
     sword = Sword(arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7), arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png",scale=0.5 * 0.7), (0.0, 0.0))
     bow = Bow(arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png",scale=0.5 * 0.7), arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png",scale=0.5 * 0.7), (0.0, 0.0))
 
     weapon_list.append(sword.attribute)
     weapon_list.append(bow.attribute)
-
-    sword.attribute.visible = False
-    bow.attribute.visible = False 
     
     #Active l'arme qui va apparaitre à l'écran
     active_weapon = Active_Weapon([sword, bow], 0)
+    for weapon in active_weapon.weapons:
+        weapon.attribute.visible = False
    
     """Lateral speed of the player, in pixels per frame."""
     
@@ -275,8 +302,8 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Monster":
             self.monster_list.append(sprite)
-            monsters = monster(sprite, -1)
-            self.monster_TABLE.monsters.append(monsters)
+            monsters = blob(sprite, -1)
+            self.blob_TABLE.monsters.append(monsters)
 
         if type == "No-go":
             self.no_go_list.append(sprite)
@@ -297,12 +324,6 @@ class GameView(arcade.View):
 
         # Setup our game
         self.setup()
-    
-    def check_for_next_level(self) -> None:
-        exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
-        for exit in exit_list:
-             All_maps.index += 1
-             self.setup()
 
     def setup(self) -> None:
         """Set up the game here."""
@@ -346,12 +367,21 @@ class GameView(arcade.View):
         #Initialisation de l'icone des armes
         self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
         self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
-        self.sword_repr.visible = True
-        self.bow_repr.visible = False
+        
 
-        #Initialisation 
+        #Initialisation des armes
         self.weapon_icon_list.append(self.sword_repr)
         self.weapon_icon_list.append(self.bow_repr)
+        for icon in self.weapon_icon_list:
+            icon.visible = False
+        self.weapon_icon_list[self.active_weapon.index].visible = True
+    
+    #Fonction qui détecte si le joueur collisionne avec le paneau
+    def check_for_next_level(self) -> None:
+        exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
+        for exit in exit_list:
+             All_maps.index += 1
+             self.setup()
         
         
     #Variables booléennes qui détectent quand les touches sont appuyées
@@ -365,12 +395,12 @@ class GameView(arcade.View):
         self.arrow_list.append(arrow)
         return arrow
     
-
+    #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if arcade.MOUSE_BUTTON_LEFT:
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
-            #self.sword_timer = 0.2
+            self.sword_timer = 0.2
             if self.active_weapon.index == 1:
                 self.Allow_change_weapon = False
                 arrow = Arrow(self.create_arrow(), self.player_sprite, self.camera.position)
@@ -469,38 +499,6 @@ class GameView(arcade.View):
          if player_y <= down_edge:
               self.camera.position = (self.camera.position[0], self.camera.position[1] - abs(player_y - down_edge))#type ignore
 
-    #Fonction qui déplace le blob
-    def blob_position(self) -> None:
-         for blob in self.monster_TABLE.monsters:
-            collision = self.blob_collision(blob.type, blob.speed)
-            if collision == True:
-                 #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
-                 blob.speed *= -1
-                 blob.type.scale_x *= -1
-            blob.type.change_x = blob.speed
-         self.monster_list.update()
-    
-    #Fonction qui détecte les collisions
-    def blob_collision(self, blob: arcade.Sprite, change_x : int) -> bool:
-        #point en dessous du blob pour les collision sur les bords
-        point_y = blob.bottom - (Grid_size / 2)
-        if change_x == -1:
-             point_x = blob.left
-        else:
-             point_x = blob.right
-        point = (point_x, point_y)
-        #detecte les collisions entre le point et l'air, lave et murs
-        collided_lava = arcade.get_sprites_at_point(point, self.no_go_list)
-        collided_box = arcade.get_sprites_at_point((point_x, blob.center_y), self.wall_list)
-        collided_air = arcade.get_sprites_at_point(point, self.wall_list)
-        if collided_air == []:
-             return True
-        for lava in collided_lava:
-             return True
-        for box in collided_box:
-             return True
-        return False
-    
     def game_over(self, danger : arcade.sprite_list) -> None:
         hit = arcade.check_for_collision_with_list(self.player_sprite, danger)
         for elements in hit:
@@ -552,7 +550,10 @@ class GameView(arcade.View):
             arrows.check_hit_monsters(self.monster_list)
             
         #position du blob
-        self.blob_position()
+        for blob in self.blob_TABLE.monsters:
+            blob.monster_position(self.no_go_list, self.wall_list)
+        self.monster_list.update()
+            
 
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
