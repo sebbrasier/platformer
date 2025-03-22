@@ -73,9 +73,6 @@ class Sword(Weapon):
         Sword.can_kill= False
 
 
-        
-    
-
 
 #Classe pour l'arc qui hérite de Weapon
 class Bow(Weapon):
@@ -214,6 +211,13 @@ class blob(monster):
                 self.speed *= -1
                 self.type.scale_x *= -1
         self.type.change_x = self.speed
+
+class chauve_souris(monster):
+    def __init__(self, type : arcade.Sprite):
+        super().__init__(type)
+
+    def monster_position(self, no_go_list : arcade.SpriteList , wall_list: arcade.SpriteList) -> None:
+        pass
         
 #Cette classe va permettre de ranger les monster avec leur vitesse
 class monster_table:
@@ -239,7 +243,9 @@ def char_to_sprite(char: str) -> tuple[str, str]:
      if char == "*":
           return ("Coin", ":resources:/images/items/coinGold.png")
      if char == "o":
-          return ("Monster", ":resources:/images/enemies/slimePurple.png")
+          return ("Monster1", ":resources:/images/enemies/slimePurple.png")
+     if char == "v":
+          return ("Monster2", "assets/kenney-extended-enemies-png/bat.png")
      if char == "£":
           return ("No-go", ":resources:/images/tiles/lava.png")
      if char == "S":
@@ -270,7 +276,7 @@ class GameView(arcade.View):
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     blob_TABLE = monster_table([])
-
+    chauve_souris_TABLE = monster_table([])
 
     #UI elements
     camera: arcade.camera.Camera2D
@@ -311,11 +317,14 @@ class GameView(arcade.View):
             self.wall_list.append(sprite)
         if type == "Coin":
               self.coin_list.append(sprite)
-        if type == "Monster":
+        if type == "Monster2":
             self.monster_list.append(sprite)
-            monsters = blob(sprite, -1)
+            monsters = chauve_souris(sprite)
+            self.chauve_souris_TABLE.monsters.append(monsters)
+        if type == "Monster1":
+            self.monster_list.append(sprite)
+            monsters = blob(sprite, -1) #type ignore
             self.blob_TABLE.monsters.append(monsters)
-
         if type == "No-go":
             self.no_go_list.append(sprite)
         if type == "Player":
@@ -349,6 +358,7 @@ class GameView(arcade.View):
         self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
         self.arrow_list = arcade.SpriteList()
         self.arrow_class_list = []
+
 
         # on s'assure que les armes sont bien invisible au lancement du jeu
         for weapon in self.active_weapon.weapons:
@@ -573,8 +583,6 @@ class GameView(arcade.View):
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
         self.game_over(self.monster_list)
-        
-    
              
 
 
