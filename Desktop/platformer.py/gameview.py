@@ -50,10 +50,11 @@ class Weapon:
             for monster in monsters_hit:
                 monster.remove_from_sprite_lists()
                 arcade.play_sound(hit_sound)
+            
 
 #Class pour l'épée qui hérite de Weapon
 class Sword(Weapon):
-
+    can_kill = False
     def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
         super().__init__(attribute, player_sprite, camera_position)
 
@@ -62,6 +63,18 @@ class Sword(Weapon):
         vec = (25 * math.cos(weapon_r), 25 * math.sin(-weapon_r))
         self.attribute.center_x = self.player_sprite.center_x + vec[0]
         self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
+
+    def check_hit_monsters(self, monster_list: arcade.SpriteList) -> None:
+        """
+        L'épée ne tue les monstres que si can_kill est True, juste pendant l'image du clic
+        """
+        if Sword.can_kill == True:
+            super().check_hit_monsters(monster_list)
+        Sword.can_kill= False
+
+
+        
+    
 
 
 #Classe pour l'arc qui hérite de Weapon
@@ -258,8 +271,6 @@ class GameView(arcade.View):
     #Cette liste va permettre de ranger les instances de la class "monster"
     blob_TABLE = monster_table([])
 
-    # declaration des variables utilisées pour l'épée
-    sword_timer: float = 0.0
 
     #UI elements
     camera: arcade.camera.Camera2D
@@ -338,6 +349,10 @@ class GameView(arcade.View):
         self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
         self.arrow_list = arcade.SpriteList()
         self.arrow_class_list = []
+
+        # on s'assure que les armes sont bien invisible au lancement du jeu
+        for weapon in self.active_weapon.weapons:
+            weapon.attribute.visible = False
         
         MAP = All_maps.Maps[All_maps.index]
         #Création de la map
@@ -397,10 +412,10 @@ class GameView(arcade.View):
     
     #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
-        if arcade.MOUSE_BUTTON_LEFT:
+        if button == arcade.MOUSE_BUTTON_LEFT:
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
-            self.sword_timer = 0.2
+            Sword.can_kill = True
             if self.active_weapon.index == 1:
                 self.Allow_change_weapon = False
                 arrow = Arrow(self.create_arrow(), self.player_sprite, self.camera.position)
@@ -529,13 +544,13 @@ class GameView(arcade.View):
         weapon.camera_position = self.camera.position
         weapon.player_sprite = self.player_sprite
         weapon.update_weapon_position()
+        
 
         #check si l'épée touche un monstre
         weapon.check_hit_monsters(self.monster_list)
-        if self.sword_timer > 0:
-            self.sword_timer -= delta_time
-            if self.sword_timer <= 0:
-                self.sword.attribute.visible = False
+        
+        
+
         
         #Update position des flèches:
         for arrow in self.arrow_list:

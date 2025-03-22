@@ -22,22 +22,32 @@ def test_map() -> None:
 def test_blob(window: arcade.Window) -> None:
     view = GameView()
     window.show_view(view)
-    monster_TABLE = view.monster_TABLE.monsters
-    window.test(30)
-    i = 0
-    #Vérifie que les premières secondes, le blob collisionne avec rien
-    for monster in monster_TABLE:
-        change_x = monster.speed
-        assert view.blob_collision(monster.type, change_x) == False
-        i += 1
-    window.test(15)
-    #Vérifie que le blob change de diréction apres collision
-    for i in range(60):
-        monst = view.monster_TABLE[0]
-        if (view.blob_collision(monst.type, monst.speed) == True):
-            assert monst.speed == -1
-            assert monst.type.scale_x == 0.5
-        window.test(1)
+
+    # Créer un sprite pour le blob et le positionner
+    blob_sprite = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
+    blob_sprite.center_x = 100
+    blob_sprite.center_y = 100
+
+    blob_instance = blob(blob_sprite, 1)
+
+    # On s'assure que les listes d'obstacles sont initialisées et vides
+    view.wall_list = arcade.SpriteList()
+    view.no_go_list = arcade.SpriteList()
+
+    # On force une collision 
+    obstacle = arcade.Sprite(":resources:/images/tiles/boxCrate_double.png", scale=0.5)
+    obstacle.center_x = blob_sprite.right
+    obstacle.center_y = blob_sprite.center_y
+    view.wall_list.append(obstacle)
+
+    # Avant la collision, la vitesse est 1
+    vitesse_initiale = blob_instance.speed
+
+    # Appeler la méthode qui gère la collision et le changement de direction.
+    blob_instance.monster_position(view.no_go_list, view.wall_list)
+
+    # Après collision, on attend que la vitesse soit inversée.
+    assert blob_instance.speed == -vitesse_initiale
 
     
 #test que l'on revient bien au début apres avoir touché un blob et de la lave
@@ -123,22 +133,31 @@ def test_sword_hits_blob(window: arcade.Window) -> None:
     """
     view = GameView()
     window.show_view(view)
-    
-    # Créer un blob et le placer à la même position que le joueur.
-    blob = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
-    blob.center_x = view.player_sprite.center_x
-    blob.center_y = view.player_sprite.center_y
-    view.monster_list.append(blob)
-    view.monster_TABLE.monsters.append(monster(blob, -1))
-    
-    # Rendre l'épée visible et la positionner sur le blob.
-    view.sword.visible = True
-    view.sword.center_x = blob.center_x
-    view.sword.center_y = blob.center_y
-    
-    # Vérifier que la collision supprime le blob
-    view.check_sword_hit_monster()
-    assert blob not in view.monster_list
+
+    # Créer un sprite pour le blob et le placer à la position du joueur.
+    blob_sprite = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
+    blob_sprite.center_x = view.player_sprite.center_x
+    blob_sprite.center_y = view.player_sprite.center_y
+    view.monster_list.append(blob_sprite)
+
+    # Créer une instance de blob et l'ajouter dans la table des blobs.
+    blob_instance = blob(blob_sprite, -1)
+    view.blob_TABLE.monsters.append(blob_instance)
+
+    # Récupérer l'épée active via active_weapon (l'épée est à l'indice 0).
+    sword = view.active_weapon.weapons[0]
+
+    # Rendre l'épée visible et positionner son sprite sur le blob.
+    Sword.can_kill = True
+    sword.attribute.visible = True
+    sword.attribute.center_x = blob_sprite.center_x
+    sword.attribute.center_y = blob_sprite.center_y
+
+    # Simuler l'attaque : l'épée vérifie les collisions et doit retirer le blob.
+    sword.check_hit_monsters(view.monster_list)
+
+    # Vérifier que le sprite du blob a bien été retiré de la liste des monstres.
+    assert blob_sprite not in view.monster_list
 
 
 def test_score_reset_after_game_over(window: arcade.Window) -> None:
@@ -172,13 +191,16 @@ def test_sword_appears_on_click(window: arcade.Window) -> None:
     window.show_view(view)
     
     # S'assurer que l'épée est initialement invisible.
-    view.sword.visible = False
-    
-    # Simuler un clic gauche de souris à des coordonnées arbitraires 
+    sword = view.active_weapon.weapons[0]  # 0 : indice de l'épée dans la liste
+
+    # S'assurer que l'épée est invisible au début
+    assert not sword.attribute.visible
+
+    # Simuler un clic gauche de souris à des coordonnées arbitraires
     view.on_mouse_press(150, 150, arcade.MOUSE_BUTTON_LEFT, 0)
-    
-    # Vérifier que l'épée est visible
-    assert view.sword.visible
+
+    # Vérifier que l'épée est visible après le clic
+    assert sword.attribute.visible
     window.test(5)
 
 
