@@ -165,10 +165,10 @@ class score:
 
 #Les deux classes si-dessous permettent de mieux gérer le déplacement de chaque monstre
 class monster:
-    type: arcade.Sprite
+    sprite: arcade.Sprite
 
-    def __init__(self, type : arcade.Sprite) -> None:
-        self.type = type
+    def __init__(self, sprite : arcade.Sprite) -> None:
+        self.sprite = sprite
     
     @abstractmethod
     def monster_position(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> None:
@@ -183,7 +183,7 @@ class blob(monster):
     
     def monster_collision(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> bool:
         #point en dessous du blob pour les collision sur les bords
-        blob = self.type
+        blob = self.sprite
         change_x = self.speed
         point_y = blob.bottom - (Grid_size / 2)
         if change_x == -1:
@@ -209,15 +209,30 @@ class blob(monster):
         if collision is True:
                 #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
                 self.speed *= -1
-                self.type.scale_x *= -1
-        self.type.change_x = self.speed
+                self.sprite.scale_x *= -1
+        self.sprite.change_x = self.speed
 
 class chauve_souris(monster):
-    def __init__(self, type : arcade.Sprite):
-        super().__init__(type)
+    speed: float
+    start_x: float
+    start_y: float
+    boundary: float
 
-    def monster_position(self, no_go_list : arcade.SpriteList , wall_list: arcade.SpriteList) -> None:
-        pass
+    def __init__(self, sprite: arcade.Sprite, speed: float, boundary: float) -> None:
+
+        super().__init__(sprite)
+        self.speed = speed
+        # Enregistrer la position initiale du sprite.
+        self.start_x = sprite.center_x
+        self.start_y = sprite.center_y
+        self.boundary = boundary
+
+    def monster_position(self, no_go_list: arcade.SpriteList, wall_list: arcade.SpriteList) -> None:
+        self.sprite.center_x += self.speed
+
+        if self.sprite.center_x <= self.start_x - self.boundary or self.sprite.center_x >= self.start_x + self.boundary:
+            self.speed *= -1
+            self.sprite.scale_x *= -1
         
 #Cette classe va permettre de ranger les monster avec leur vitesse
 class monster_table:
@@ -319,7 +334,7 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Monster2":
             self.monster_list.append(sprite)
-            monsters = chauve_souris(sprite)
+            monsters = chauve_souris(sprite,-1,100)
             self.chauve_souris_TABLE.monsters.append(monsters)
         if type == "Monster1":
             self.monster_list.append(sprite)
@@ -559,9 +574,6 @@ class GameView(arcade.View):
         #check si l'épée touche un monstre
         weapon.check_hit_monsters(self.monster_list)
         
-        
-
-        
         #Update position des flèches:
         for arrow in self.arrow_list:
             arrow.change_y -= 1.5
@@ -577,7 +589,12 @@ class GameView(arcade.View):
         #position du blob
         for blob in self.blob_TABLE.monsters:
             blob.monster_position(self.no_go_list, self.wall_list)
+        
+        for bat in self.chauve_souris_TABLE.monsters :
+            bat.monster_position(self.no_go_list,self.wall_list)
+
         self.monster_list.update()
+        
             
 
         #Detection de la collision avec la lave et les blobs:
