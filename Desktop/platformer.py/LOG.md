@@ -32,6 +32,11 @@
 * [x] ajout du son quand on tue un blob                                          
                                             
 ### Semaine 5
+* [x] changement de fonctionnement de l'épée pour qu'elle puisse tuer seulement pendant 1 frame                                       
+* [x] ajout de tests                                           
+* [x] ajout de class monstre et armes
+* [x] ajout de l'arc et les flèches                                          
+* [x] ajout des chauves_souris
 
 ### Semaine 6
 

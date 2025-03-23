@@ -3,6 +3,7 @@ from readmap import *
 import math
 from typing import Final
 from abc import ABC, abstractmethod
+import random
 
 #Variables globales
 WINDOW_WIDTH = 1280
@@ -217,6 +218,8 @@ class chauve_souris(monster):
     start_x: float
     start_y: float
     boundary: float
+    vx: float
+    vy: float
 
     def __init__(self, sprite: arcade.Sprite, speed: float, boundary: float) -> None:
 
@@ -226,13 +229,36 @@ class chauve_souris(monster):
         self.start_x = sprite.center_x
         self.start_y = sprite.center_y
         self.boundary = boundary
+        angle = random.uniform(0, 2 * math.pi)
+        self.vx = math.cos(angle) * speed
+        self.vy = math.sin(angle) * speed
 
     def monster_position(self, no_go_list: arcade.SpriteList, wall_list: arcade.SpriteList) -> None:
-        self.sprite.center_x += self.speed
+        if random.random() < 0.01:
+            current_angle = math.atan2(self.vy, self.vx)
+            delta_angle = random.gauss(60, math.pi / 60)
+            new_angle = current_angle + delta_angle
+            self.vx = math.cos(new_angle) * self.speed
+            self.vy = math.sin(new_angle) * self.speed
 
-        if self.sprite.center_x <= self.start_x - self.boundary or self.sprite.center_x >= self.start_x + self.boundary:
-            self.speed *= -1
+        # Calcul de la nouvelle position
+        new_x = self.sprite.center_x + self.vx
+        new_y = self.sprite.center_y + self.vy
+
+        if new_x < self.start_x - self.boundary or new_x > self.start_x + self.boundary:
+            self.vx *= -1
+            
             self.sprite.scale_x *= -1
+            new_x = self.sprite.center_x + self.vx
+
+        if new_y < self.start_y - self.boundary or new_y > self.start_y + self.boundary:
+            self.vy *= -1
+            new_y = self.sprite.center_y + self.vy
+
+        # Mettre à jour la position du sprite
+        self.sprite.center_x = new_x
+        self.sprite.center_y = new_y
+        
         
 #Cette classe va permettre de ranger les monster avec leur vitesse
 class monster_table:
@@ -507,9 +533,9 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.player_sprite_list.draw()
             self.wall_list.draw()
+            self.no_go_list.draw()
             self.coin_list.draw()
             self.monster_list.draw()
-            self.no_go_list.draw()
             self.weapon_list.draw()
             self.next_level_list.draw()
             self.arrow_list.draw()

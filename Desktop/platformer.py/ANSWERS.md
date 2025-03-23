@@ -34,4 +34,21 @@ Quand la joueuse atteint le point E, on ajoute 1 a All.map.index grace a la fonc
 Que se passe-t-il si la joueuse atteint le E mais la carte n’a pas de next-map ?
 Pour l'instant si cela se passe le jeu crash.
 
+### semaine 5
+
+Quelles formules utilisez-vous exactement pour l’arc et les flèches ?
+Pour l'orientation de l'arc nous utilisons la meme methode que pour l'épée qui est défini dans la class Parents.
+Pour les flèches, on transforme premièrment l'angle d'orientation en radian, puis on créée un vecteur avec comme coordonnées 25*cos(angle) et 25*sin(-angle) que on va ensuite additionner à la vitesse de la flèche pour qu'on puisse la tirer.
+
+Quelles formules utilisez-vous exactement pour le déplacement des chauves-souris (champ d’action, changements de direction, etc.) ?
+
+Pour le déplacement des chauves souris, nous avons défini un carré défini par bundary, qui nous sert de barrière imaginaire. La chauve souris change de direction a 180 degré quand elle touche une paroi. Pour les changements de direction entre les parois nous utilisons random.gauss pour calculer la variation d'angle avec une moyenne de 60 et un écart type tres faible de pi/90 pour que les changements soit fluides et pas brutales. Les changements de direction se produisent seulement si random est inferieur à 0.01 pour que ca soit assez réaliste.
+
+Comment avez-vous structuré votre programme pour que les flèches puissent poursuivre leur vol ?
+Nous avons premierement mis pass a la méthode parent update_weapon_position pour que la fleche ne soit pas toujours collé au joueur. Puis nous avonbs créé une nouvel méthode shoot dans la class Enfant Arrow qui calcul un vecteur, puis additionne ce vecteur à la position pour que la flèche aille dans la bonne direction.
+
+Comment gérez-vous le fait que vous avez maintenant deux types de monstres, et deux types d’armes ? Comment faites-vous pour ne pas dupliquer du code entre ceux-ci ?
+
+Pour gérer le fait que l'on a maintenant 2 types de monstres et 2 types d'armes nous avons donc créé des classes hérité avec comme classes parents une class monstre et une class arme pour ensuite pouvoir avoir des class enfants et y mettre nos différents monstres et armes. Nous avons aussi du créer 2 listes (blob_Table et chauve_souris_TABLE pour pouvoir anger les instances de ces monstres séparement)
+
 

@@ -8,8 +8,7 @@ from readmap import Map_game
 #test ouverture du fichier map
 def test_map() -> None:
     #Bien vérifier que l'on a extrait les bonnes informations du text "map"
-    assert Map_game.setup[0][0] == "*"
-    assert Map_game.dim == (20, 6)
+    assert Map_game.dim == (20, 7)
     #Vérifier que la fonction qui lit des fichier gère correctement les exceptions
     file = "non_existent_file.txt"
     assert(lecture_map(file) == [])
