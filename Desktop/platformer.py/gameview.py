@@ -284,9 +284,9 @@ def char_to_sprite(char: str) -> tuple[str, str]:
      if char == "*":
           return ("Coin", ":resources:/images/items/coinGold.png")
      if char == "o":
-          return ("Monster1", ":resources:/images/enemies/slimePurple.png")
+          return ("Blob", ":resources:/images/enemies/slimePurple.png")
      if char == "v":
-          return ("Monster2", "assets/kenney-extended-enemies-png/bat.png")
+          return ("Chauve-souris", "assets/kenney-extended-enemies-png/bat.png")
      if char == "£":
           return ("No-go", ":resources:/images/tiles/lava.png")
      if char == "S":
@@ -316,8 +316,7 @@ class GameView(arcade.View):
     arrow_class_list = []
 
     #Cette liste va permettre de ranger les instances de la class "monster"
-    blob_TABLE = monster_table([])
-    chauve_souris_TABLE = monster_table([])
+    monster_TABLE = monster_table([])
 
     #UI elements
     camera: arcade.camera.Camera2D
@@ -358,14 +357,14 @@ class GameView(arcade.View):
             self.wall_list.append(sprite)
         if type == "Coin":
               self.coin_list.append(sprite)
-        if type == "Monster2":
+        if type == "Chauve-souris":
             self.monster_list.append(sprite)
             monsters = chauve_souris(sprite,-1,100)
-            self.chauve_souris_TABLE.monsters.append(monsters)
-        if type == "Monster1":
+            self.monster_TABLE.monsters.append(monsters)
+        if type == "Blob":
             self.monster_list.append(sprite)
             monsters = blob(sprite, -1) #type ignore
-            self.blob_TABLE.monsters.append(monsters)
+            self.monster_TABLE.monsters.append(monsters)
         if type == "No-go":
             self.no_go_list.append(sprite)
         if type == "Player":
@@ -613,15 +612,14 @@ class GameView(arcade.View):
             arrows.check_hit_monsters(self.monster_list)
             
         #position du blob
-        for blob in self.blob_TABLE.monsters:
-            blob.monster_position(self.no_go_list, self.wall_list)
+        for monster in self.monster_TABLE.monsters:
+            monster.monster_position(self.no_go_list, self.wall_list)
         
-        for bat in self.chauve_souris_TABLE.monsters :
-            bat.monster_position(self.no_go_list,self.wall_list)
+        #for bat in self.chauve_souris_TABLE.monsters :
+            #bat.monster_position(self.no_go_list,self.wall_list)
 
         self.monster_list.update()
-        
-            
+                    
 
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
