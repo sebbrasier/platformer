@@ -89,7 +89,6 @@ Map_game3 = Map(dim("maps/map3.txt"), lecture_map("maps/map3.txt"))
 All_maps.Maps.append(Map_game)
 All_maps.Maps.append(Map_game2)
 All_maps.Maps.append(Map_game3)
-print(Map_game)
 
 
 

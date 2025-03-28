@@ -141,7 +141,7 @@ def test_sword_hits_blob(window: arcade.Window) -> None:
 
     # Créer une instance de blob et l'ajouter dans la table des blobs.
     blob_instance = blob(blob_sprite, -1)
-    view.blob_TABLE.monsters.append(blob_instance)
+    view.monster_TABLE.monsters.append(blob_instance)
 
     # Récupérer l'épée active via active_weapon (l'épée est à l'indice 0).
     sword = view.active_weapon.weapons[0]
