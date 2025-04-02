@@ -134,6 +134,8 @@ class Arrow(Weapon):
             return True
         for wall in wall_hit:
             return True
+        if self.attribute.center_y <= (self.camera_position[1] - 720/2 ):
+            return True
         return False
 
 

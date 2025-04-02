@@ -226,9 +226,9 @@ class GameView(arcade.View):
         if button == arcade.MOUSE_BUTTON_LEFT:
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
+            self.Allow_change_weapon = False
             Sword.can_kill = True
             if self.active_weapon.index == 1:
-                self.Allow_change_weapon = False
                 arrow = Arrow(self.create_arrow(), self.player_sprite, self.camera.position)
                 arrow.Activated = True
                 arrow.shoot(x, y)
@@ -245,7 +245,7 @@ class GameView(arcade.View):
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
-        PLAYER_MOVEMENT_SPEED = 4
+        PLAYER_MOVEMENT_SPEED = 3
         PLAYER_JUMP_SPEED = 18
         
         if key == arcade.key.RIGHT:
@@ -376,9 +376,6 @@ class GameView(arcade.View):
         #position du blob
         for monster in self.monster_TABLE.monsters:
             monster.monster_position(self.no_go_list, self.wall_list)
-        
-        #for bat in self.chauve_souris_TABLE.monsters :
-            #bat.monster_position(self.no_go_list,self.wall_list)
 
         self.monster_list.update()
                     
