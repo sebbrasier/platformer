@@ -94,6 +94,9 @@ class GameView(arcade.View):
     sword : Sword
     bow : Bow
 
+    #Initialiser la liste de fichiers
+    file_list : Map_list
+
     def __init__(self) -> None:
         # Magical incantion: initialize the Arcade view
         super().__init__()
@@ -116,10 +119,13 @@ class GameView(arcade.View):
         self.game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
 
-        # Setup our game
-        self.setup()
+        #Initialisation des listes de fichiers
+        self.file_list = Map_list(["maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)
 
-    def setup(self) -> None:
+        # Setup our game
+        self.setup(self.file_list.Maps[self.file_list.index])
+
+    def setup(self, MAP_file : str) -> None:
         """Set up the game here."""
         PLAYER_GRAVITY = 1
 
@@ -136,7 +142,7 @@ class GameView(arcade.View):
         self.arrow_class_list = []
         self.monster_TABLE = monster_table([])
         
-        MAP = All_maps.Maps[All_maps.index]
+        MAP = lecture_map(MAP_file)
         #Création de la map
         for i in  range(len(MAP)):
             for j in range(len(MAP[i])):
@@ -185,8 +191,8 @@ class GameView(arcade.View):
     def check_for_next_level(self) -> None:
         exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
         for exit in exit_list:
-             All_maps.index += 1
-             self.setup()
+             self.file_list.index += 1
+             self.setup(self.file_list.Maps[self.file_list.index])
     
      #Ranger les sprites dans la bonne liste selon son asset
     def sprite_type(self, type : str, sprite: arcade.Sprite) -> None:
@@ -266,7 +272,7 @@ class GameView(arcade.View):
             arcade.play_sound(self.jump_sound)
 
         if key == arcade.key.ESCAPE:
-            self.setup()
+            self.setup(self.file_list.Maps[self.file_list.index])
 
         #change weapon
         if key == arcade.key.P and self.Allow_change_weapon == True:
@@ -329,8 +335,8 @@ class GameView(arcade.View):
         hit : list[arcade.Sprite]
         hit = arcade.check_for_collision_with_list(self.player_sprite, danger)
         for elements in hit:
-            All_maps.index = 0
-            self.setup()
+            self.file_list.index = 0
+            self.setup(self.file_list.Maps[self.file_list.index])
             self.coin_score.erase
         # son 
             arcade.play_sound(self.game_over_sound)

@@ -62,10 +62,10 @@ class Map:
 #Classe pour classer les maps
 class Map_list:
     #Une liste de map, l'index représente la map affichée à l'écran
-    Maps : list[Map]
+    Maps : list[str]
     index : int
 
-    def __init__(self, Maps: list[Map], index:int) -> None:
+    def __init__(self, Maps: list[str], index:int) -> None:
         self.Maps = Maps
         self.index = index
     
@@ -75,20 +75,12 @@ class Map_list:
     def __len__(self) -> int:
         return len(self.Maps)
     
-    def __getitem__(self, i: int) -> Map:
+    def __getitem__(self, i: int) -> str:
         return self.Maps[i]
     
 
-All_maps = Map_list([], 0)
-#Ceci correspond à la map dans le jeu: initialisée dans gameview
-Map_game = Map(dim("maps/map1.txt"), lecture_map("maps/map1.txt"))
-Map_game2 = Map(dim("maps/map2.txt"), lecture_map("maps/map2.txt"))
-Map_game3 = Map(dim("maps/map3.txt"), lecture_map("maps/map3.txt"))
 
 
-All_maps.Maps.append(Map_game)
-All_maps.Maps.append(Map_game2)
-All_maps.Maps.append(Map_game3)
 
 
 

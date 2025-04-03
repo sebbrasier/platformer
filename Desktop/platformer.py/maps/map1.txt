@@ -1,5 +1,5 @@
 width: 20
-height: 7
+height: 6
 ---
        v
 *  v -  -   v
