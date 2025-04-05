@@ -1,7 +1,18 @@
 
+#Fonction pour stocker un str dans une matrice avec 1  char par coefficient
+def str_to_matrix(file : str) -> list[list[str]]:
+    tableau = []
+    for element in file.splitlines():
+        ligne = []
+        for c in element:
+            ligne.append(c)
+        tableau.append(ligne)
+    
+    return tableau[3:-1]
+
+
 #Ouverture et lecture du fichier "map" pour ensuite la placer dans une matrice
 def lecture_map(fichier : str) -> list[list[str]]:
-    tableau = []
     try:
         with open(fichier, "r", encoding="utf-8", newline="\n") as f:
             line = f.read()
@@ -10,14 +21,8 @@ def lecture_map(fichier : str) -> list[list[str]]:
         print(e)
         return[]
 
-    #On garde seulement le contenu de la map
-    for element in line.splitlines():
-        ligne = []
-        for c in element:
-            ligne.append(c)
-        tableau.append(ligne)
-    
-    return tableau[3:-1]
+    #On garde seulement le contenu de la map, pas la dimension
+    return str_to_matrix(line)
 
 
 #Calcul des dimensions de la map
@@ -39,7 +44,6 @@ def dim(fichier : str) -> tuple[int, int]:
         print(e)
 
     return width, height
-
 
 #Création d'une classe "map" :
 class Map:

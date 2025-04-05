@@ -39,7 +39,7 @@ class Weapon:
         ...
     
     #Méthode qui va etre utile pour les fleches et l'épée
-    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
+    def check_hit_monsters(self, monster_list : arcade.SpriteList[arcade.Sprite]) -> None:
         monsters_hit= []
         if self.attribute.visible == True:
             monsters_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
@@ -60,7 +60,7 @@ class Sword(Weapon):
         self.attribute.center_x = self.player_sprite.center_x + vec[0]
         self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
 
-    def check_hit_monsters(self, monster_list: arcade.SpriteList) -> None:
+    def check_hit_monsters(self, monster_list: arcade.SpriteList[arcade.Sprite]) -> None:
         """
         L'épée ne tue les monstres que si can_kill est True, juste pendant l'image du clic
         """
@@ -96,7 +96,7 @@ class Bow(Weapon):
         self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
     
     #L'arc ne tue personne, c'est la flèche
-    def check_hit_monsters(self, monster_list : arcade.SpriteList) -> None:
+    def check_hit_monsters(self, monster_list : arcade.SpriteList[arcade.Sprite]) -> None:
         pass
 
 
@@ -124,7 +124,7 @@ class Arrow(Weapon):
         pass
 
     #Fonction qui détecte les collisions avec la flèche
-    def arrow_collision(self, no_go_list : arcade.SpriteList, monster_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> bool:
+    def arrow_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], monster_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> bool:
         lava_hit = arcade.check_for_collision_with_list(self.attribute, no_go_list)
         monster_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
         wall_hit = arcade.check_for_collision_with_list(self.attribute, wall_list)

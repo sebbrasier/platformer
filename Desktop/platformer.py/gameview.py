@@ -230,11 +230,14 @@ class GameView(arcade.View):
     #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if button == arcade.MOUSE_BUTTON_LEFT:
+            #Fait appraitre l'arme que l'on a sélectionné, indiqué par active_weapon.index
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
             self.Allow_change_weapon = False
+            #S'assurer que l'épée ne peut que tuer le blob pendait le click
             Sword.can_kill = True
             if self.active_weapon.index == 1:
+                #Fait appraitre la flèche si on a séléctionné l'arc
                 arrow = Arrow(self.create_arrow(), self.player_sprite, self.camera.position)
                 arrow.Activated = True
                 arrow.shoot(x, y)
@@ -243,8 +246,19 @@ class GameView(arcade.View):
             # Positionner l'épée en fonction de l'angle
             weapon.update_weapon_orientation(x,y)
             weapon.attribute.visible = True
+        
+        # Clic droit pour changer d'arme
+        if button == arcade.MOUSE_BUTTON_RIGHT and self.Allow_change_weapon:
+            #Fait disparaitre l'icon de l'arme qui était affichée
+            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
+            weapon_repr.visible = False
+            self.active_weapon.change_index(self.active_weapon.index + 1)
+            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
+            weapon_repr.visible = True
+
             
     def on_mouse_release(self, x:int, y:int, button:int, modifiers:int) -> None :
+            #Fait disparaitre l'arme que l'on a en main
             weapon = self.active_weapon.weapons[self.active_weapon.index]
             weapon.attribute.visible = False
             self.Allow_change_weapon = True
@@ -273,14 +287,6 @@ class GameView(arcade.View):
 
         if key == arcade.key.ESCAPE:
             self.setup(self.file_list.Maps[self.file_list.index])
-
-        #change weapon
-        if key == arcade.key.P and self.Allow_change_weapon == True:
-            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
-            weapon_repr.visible = False
-            self.active_weapon.change_index(self.active_weapon.index + 1)
-            weapon_repr = self.weapon_icon_list[self.active_weapon.index]
-            weapon_repr.visible = True
             
 
     def on_key_release(self, key: int, modifiers: int) -> None:
@@ -331,10 +337,11 @@ class GameView(arcade.View):
          if player_y <= down_edge:
               self.camera.position = Vec2(self.camera.position[0], self.camera.position[1] - abs(player_y - down_edge))
 
-    def game_over(self, danger : arcade.sprite_list) -> None:
+    def game_over(self, danger : arcade.SpriteList[arcade.Sprite]) -> None:
         hit : list[arcade.Sprite]
         hit = arcade.check_for_collision_with_list(self.player_sprite, danger)
         for elements in hit:
+            #On appelle setup dès que l'on meurt
             self.file_list.index = 0
             self.setup(self.file_list.Maps[self.file_list.index])
             self.coin_score.erase
@@ -363,7 +370,6 @@ class GameView(arcade.View):
         weapon.player_sprite = self.player_sprite
         weapon.update_weapon_position()
         
-
         #check si l'épée touche un monstre
         weapon.check_hit_monsters(self.monster_list)
         

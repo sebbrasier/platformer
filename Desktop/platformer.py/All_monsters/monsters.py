@@ -18,7 +18,7 @@ class monster:
         self.sprite = sprite
     
     @abstractmethod
-    def monster_position(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> None:
+    def monster_position(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> None:
         ...
 
 #Création d'une classe pour les blobs
@@ -30,7 +30,7 @@ class blob(monster):
         self.speed = speed
     
     #Fonction de collision avec l'exterieur: propre aux blobs
-    def monster_collision(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> bool:
+    def monster_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> bool:
         #point en dessous du blob pour les collision sur les bords
         blob = self.sprite
         change_x = self.speed
@@ -53,7 +53,7 @@ class blob(monster):
         return False
     
     #Fonction qui déplace le blob
-    def monster_position(self, no_go_list : arcade.SpriteList, wall_list : arcade.SpriteList) -> None:
+    def monster_position(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> None:
         collision = self.monster_collision(no_go_list, wall_list)
         if collision is True:
                 #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
@@ -83,7 +83,7 @@ class chauve_souris(monster):
         self.vy = math.sin(angle) * speed
 
     #Fonction de déplacement des chauves-souris
-    def monster_position(self, no_go_list: arcade.SpriteList, wall_list: arcade.SpriteList) -> None:
+    def monster_position(self, no_go_list: arcade.SpriteList[arcade.Sprite], wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
         if random.random() < 0.01:
             current_angle = math.atan2(self.vy, self.vx)
             delta_angle = random.gauss(60, math.pi / 60)
