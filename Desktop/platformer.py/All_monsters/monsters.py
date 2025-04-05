@@ -69,8 +69,9 @@ class chauve_souris(monster):
     boundary: float
     vx: float
     vy: float
+    random_dir : float
 
-    def __init__(self, sprite: arcade.Sprite, speed: float, boundary: float) -> None:
+    def __init__(self, sprite: arcade.Sprite, speed: float, boundary: float, random_dir : float) -> None:
 
         super().__init__(sprite)
         self.speed = speed
@@ -81,10 +82,13 @@ class chauve_souris(monster):
         angle = random.uniform(0, 2 * math.pi)
         self.vx = math.cos(angle) * speed
         self.vy = math.sin(angle) * speed
+        self.random_dir = random_dir
 
     #Fonction de déplacement des chauves-souris
     def monster_position(self, no_go_list: arcade.SpriteList[arcade.Sprite], wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
         if random.random() < 0.01:
+    def monster_position(self, no_go_list: arcade.SpriteList, wall_list: arcade.SpriteList) -> None:
+        if random.random() < self.random_dir:
             current_angle = math.atan2(self.vy, self.vx)
             delta_angle = random.gauss(60, math.pi / 60)
             new_angle = current_angle + delta_angle

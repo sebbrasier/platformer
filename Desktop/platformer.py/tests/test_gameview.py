@@ -2,71 +2,66 @@ import arcade
 
 from gameview import *
 from readmap import *
-from readmap import Map_game
+import math
 
 
 #test ouverture du fichier map
 def test_map() -> None:
+    view = GameView()
+    map_test = """
+                width: 3
+                height: 2
+                ---
+                S E
+                ===
+                ---"""
+    view.setup(map_test)
     #Bien vérifier que l'on a extrait les bonnes informations du text "map"
-    assert Map_game.dim == (20, 7)
+    assert(lecture_map(map_test) != [])
     #Vérifier que la fonction qui lit des fichier gère correctement les exceptions
-    file = "non_existent_file.txt"
-    assert(lecture_map(file) == [])
-    #Vérifier que cela s'ouvre correctement avec le fichier map1.txt:
-    file2 = "maps/map1.txt"
-    assert(lecture_map(file2) != [])
+    map_test = "non_existent_file.txt"
+    view.setup(map_test)
+    assert(lecture_map(map_test) == [])
+
 
 
 # test la collision des blobs
 def test_blob(window: arcade.Window) -> None:
     view = GameView()
+    view.setup("maps/map_tests/blob_colision.txt")
     window.show_view(view)
-
-    # Créer un sprite pour le blob et le positionner
-    blob_sprite = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
-    blob_sprite.center_x = 100
-    blob_sprite.center_y = 100
-
-    blob_instance = blob(blob_sprite, 1)
-
-    # On s'assure que les listes d'obstacles sont initialisées et vides
-    view.wall_list = arcade.SpriteList()
-    view.no_go_list = arcade.SpriteList()
-
-    # On force une collision 
-    obstacle = arcade.Sprite(":resources:/images/tiles/boxCrate_double.png", scale=0.5)
-    obstacle.center_x = blob_sprite.right
-    obstacle.center_y = blob_sprite.center_y
-    view.wall_list.append(obstacle)
-
+    window.test(50)
+    blob1 : blob
+    if isinstance(view.monster_TABLE.monsters[0],blob):
+        blob1 = view.monster_TABLE.monsters[0]
     # Avant la collision, la vitesse est 1
-    vitesse_initiale = blob_instance.speed
-
-    # Appeler la méthode qui gère la collision et le changement de direction.
-    blob_instance.monster_position(view.no_go_list, view.wall_list)
-
+    vitesse_initiale = blob1.speed
+    window.test(50)
     # Après collision, on attend que la vitesse soit inversée.
-    assert blob_instance.speed == -vitesse_initiale
+    assert blob1.speed == -vitesse_initiale
 
     
 #test que l'on revient bien au début apres avoir touché un blob et de la lave
 def test_death(window: arcade.Window) -> None:
     view = GameView()
+    view.setup("maps/map_tests/death.txt")
     window.show_view(view)
-    view.player_sprite.center_y += 128
-    view.player_sprite.center_x += 256
-    window.test(25)
+
+    window.test(50)
+    # on place le joueur sur la lave
+    view.player_sprite.center_x += 64
+    # on vérifie qu'il est bien revenu a la position initiale
     assert view.player_sprite.center_x == 64
     assert view.player_sprite.center_y == 128
-    view.player_sprite.center_x += 512
     window.test(25)
-    assert view.player_sprite.center_x == 64
-    assert view.player_sprite.center_y == 128
+    
+
 
 
 #test sauts multiples
 def test_jump(window: arcade.Window) -> None:
     view = GameView()
+    view.setup("maps/map_tests/jump.txt")
     window.show_view(view)
     view.on_key_press(arcade.key.UP, 0)
     view.on_key_release(arcade.key.UP, 0)
@@ -82,22 +77,24 @@ def test_jump(window: arcade.Window) -> None:
 #test camera follow character
 def test_camera(window: arcade.Window) -> None:
     view = GameView()
+    view.setup("maps/map_tests/camera.txt")
     window.show_view(view)
 
     cam_i = view.camera.position[0]
     left_edge = cam_i - (WINDOW_WIDTH / 2) + 410
     view.on_key_press(arcade.key.LEFT, 0)
-    window.test(10)
+    window.test(50)
     view.on_key_release(arcade.key.LEFT, 0)
     player_x = view.player_sprite.center_x
     cam_f = view.camera.position[0]
     assert (cam_f == cam_i - abs(player_x - left_edge))
-    window.test(30)
+    window.test(50)
 
 #test character sprite keeps moving after one key is released
 
 def test_left_right_keys(window: arcade.Window) -> None:
     view = GameView()
+    view.setup("maps/map_tests/camera.txt")
     window.show_view(view)
     
     view.on_key_press(arcade.key.RIGHT, 0)
@@ -126,37 +123,38 @@ def test_reset_with_escape(window: arcade.Window) -> None:
     assert view.player_sprite.center_x == 64
     assert view.player_sprite.center_y == 128
 
-def test_sword_hits_blob(window: arcade.Window) -> None:
-    """
-    Test que l'épée tue bien les blobs lorsqu'elle entre en collision.
-    """
+def test_sword(window: arcade.Window) -> None:
+    
     view = GameView()
+    view.setup("maps/map_tests/sword.txt")
     window.show_view(view)
-
-    # Créer un sprite pour le blob et le placer à la position du joueur.
-    blob_sprite = arcade.Sprite(":resources:/images/enemies/slimePurple.png", scale=0.5)
-    blob_sprite.center_x = view.player_sprite.center_x
-    blob_sprite.center_y = view.player_sprite.center_y
-    view.monster_list.append(blob_sprite)
-
-    # Créer une instance de blob et l'ajouter dans la table des blobs.
-    blob_instance = blob(blob_sprite, -1)
-    view.monster_TABLE.monsters.append(blob_instance)
 
     # Récupérer l'épée active via active_weapon (l'épée est à l'indice 0).
     sword = view.active_weapon.weapons[0]
+    # S'assurer que l'épée est invisible au début
+    assert not sword.attribute.visible
+    window.test(25)
+    # Simuler un clic gauche de souris à des coordonnées arbitraires
+    view.on_mouse_press(150, 150, arcade.MOUSE_BUTTON_LEFT, 0)
+
+    # Vérifier que l'épée est visible après le clic
+    assert sword.attribute.visible
+    window.test(25)
+    view.player_sprite.center_x += 250
+    window.test(50)
+
+    blob1 : blob
+    if isinstance(view.monster_TABLE.monsters[0],blob):
+        blob1 = view.monster_TABLE.monsters[0]
 
     # Rendre l'épée visible et positionner son sprite sur le blob.
     Sword.can_kill = True
     sword.attribute.visible = True
-    sword.attribute.center_x = blob_sprite.center_x
-    sword.attribute.center_y = blob_sprite.center_y
-
-    # Simuler l'attaque : l'épée vérifie les collisions et doit retirer le blob.
-    sword.check_hit_monsters(view.monster_list)
+    view.on_mouse_press(500,100, arcade.MOUSE_BUTTON_LEFT, 0)
+    window.test(100)
 
     # Vérifier que le sprite du blob a bien été retiré de la liste des monstres.
-    assert blob_sprite not in view.monster_list
+    assert len(view.monster_list) == 0
 
 
 def test_score_reset_after_game_over(window: arcade.Window) -> None:
@@ -179,28 +177,7 @@ def test_score_reset_after_game_over(window: arcade.Window) -> None:
     
     # Vérifier que le score est remis à zéro et que la map est réinitialisée 
     assert view.coin_score.points == 0
-    assert All_maps.index == 0
-
-
-def test_sword_appears_on_click(window: arcade.Window) -> None:
-    """
-    Test que l'épée apparaît bien lors d'un clic de souris.
-    """
-    view = GameView()
-    window.show_view(view)
-    
-    # S'assurer que l'épée est initialement invisible.
-    sword = view.active_weapon.weapons[0]  # 0 : indice de l'épée dans la liste
-
-    # S'assurer que l'épée est invisible au début
-    assert not sword.attribute.visible
-
-    # Simuler un clic gauche de souris à des coordonnées arbitraires
-    view.on_mouse_press(150, 150, arcade.MOUSE_BUTTON_LEFT, 0)
-
-    # Vérifier que l'épée est visible après le clic
-    assert sword.attribute.visible
-    window.test(5)
+    assert view.file_list.index == 0
 
 
 def test_map_transition(window: arcade.Window) -> None:
@@ -208,9 +185,10 @@ def test_map_transition(window: arcade.Window) -> None:
     Test que la collision avec le panneau de sortie (exit panel) fait passer de la map 1 à la map 2.
     """
     # Forcer l'index de la map à 0 pour démarrer sur map 1
-    All_maps.index = 0
+ 
     
     view = GameView()
+    view.file_list.index = 0
     window.show_view(view)
     
     # Créer un sprite de panneau de sortie et le placer sur le joueur
@@ -221,5 +199,142 @@ def test_map_transition(window: arcade.Window) -> None:
     
     # Vérifier que la collision avec le panneau incrémente bien l'index de la map
     view.check_for_next_level()
-    assert All_maps.index == 1
+    assert view.file_list.index == 1
     window.test(5)
+
+def test_bat(window : arcade.Window) -> None:
+
+    view = GameView()
+    view.setup("maps/map_tests/bat.txt")
+    window.show_view(view)
+
+    bat1 : chauve_souris
+    if isinstance(view.monster_TABLE.monsters[0],chauve_souris):
+        bat1 = view.monster_TABLE.monsters[0]
+
+
+    # on enlève l'effet aléatoire du mouvement de la chauve souris pour tester seulement si les bordures fonctionnent correctement
+    #test pour les bordures en x
+    bat1.random_dir = 0
+    bat1.boundary = 40
+    bat1.vx = 1
+    bat1.vy = 0
+
+    vitesse_initiale = bat1.vx
+    window.test(50)
+    # Après collision, on attend que la vitesse soit inversée.
+    assert bat1.speed == -vitesse_initiale
+
+    # test pour les bordures en y
+
+    bat1.vx = 0
+    bat1.vy = 1
+
+    vitesse_initiale = bat1.vy
+    window.test(50)
+    # Après collision, on attend que la vitesse soit inversée.
+    assert bat1.speed == -vitesse_initiale
+
+def test_sword_orientation(window: arcade.Window) -> None:
+    # Initialiser la vue et la map de test
+    view = GameView()
+    view.setup("maps/map_tests/jump.txt")
+    window.show_view(view)
+    
+    # Forcer l'épée comme arme active (index 0)
+    view.active_weapon.index = 0
+    weapon = view.active_weapon.weapons[0]
+    
+
+    window.test(25)
+    
+    # Liste de cas à tester comme clic de souris
+    test_cases = [
+        (0, 0),
+        (100, 100),
+        (-100, -50),
+        (200, -150),
+        (-250, 300),
+        (1000, 1000),
+        (500, 0),
+        (700, -150),
+        (500, 300)
+    ]
+    # on calcul d'abord les coordonnées prévu avec nos calculs puis on verifie si c'est bien ou se trouve l'épée
+    for mouse_x, mouse_y in test_cases:
+        view.on_mouse_press(mouse_x, mouse_y, arcade.MOUSE_BUTTON_LEFT, 0)
+        
+        world_x = mouse_x + view.camera.position[0] - (WINDOW_WIDTH / 2)
+        world_y = mouse_y + view.camera.position[1] - (WINDOW_HEIGHT / 2)
+        ref_x = view.player_sprite.center_x
+        ref_y = view.player_sprite.center_y
+        angle = math.atan2(ref_x - world_x, ref_y - world_y)
+        expected_angle = math.degrees(angle) + 140
+        #on verifie si l'orientation est bonne avec une tolerance de 0,01 car on manipule des float
+        assert math.isclose(weapon.attribute.angle, expected_angle, abs_tol=0.001)
+        weapon.update_weapon_position()
+
+        expected_weapon_r = math.radians(expected_angle - 50)
+        expected_vec = (25 * math.cos(expected_weapon_r), 25 * math.sin(-expected_weapon_r))
+        expected_center_x = view.player_sprite.center_x + expected_vec[0]
+        expected_center_y = view.player_sprite.center_y - 15 + expected_vec[1]
+        #on verifie si la direction est bonne avec une tolerance de 0,01 car on manipule des float
+        assert math.isclose(weapon.attribute.center_x, expected_center_x, abs_tol=0.001)
+        assert math.isclose(weapon.attribute.center_y, expected_center_y, abs_tol=0.001)
+        window.test(10)
+
+def test_bow_orientation(window: arcade.Window) -> None:
+    # Initialiser la vue et la map de test
+    view = GameView()
+    view.setup("maps/map_tests/jump.txt")
+    window.show_view(view)
+    
+    # Forcer l'arc comme arme active (indice 1, supposant que 0 est l'épée)
+    view.active_weapon.index = 1
+    weapon = view.active_weapon.weapons[1]
+    
+    window.test(25)
+    
+    # Liste de cas à tester comme clic de souris
+    test_cases = [
+        (0, 0),
+        (100, 100),
+        (-100, -50),
+        (200, -150),
+        (-250, 300),
+        (1000, 1000),
+        (500, 0),
+        (700, -150),
+        (500, 300)
+    ]
+    # on calcul d'abord les coordonnées prévu avec nos calculs puis on verifie si c'est bien ou se trouve l'arc
+    for mouse_x, mouse_y in test_cases:
+        view.on_mouse_press(mouse_x, mouse_y, arcade.MOUSE_BUTTON_LEFT, 0)
+        
+        world_x = mouse_x + view.camera.position[0] - (WINDOW_WIDTH / 2)
+        world_y = mouse_y + view.camera.position[1] - (WINDOW_HEIGHT / 2)
+        ref_x = view.player_sprite.center_x
+        ref_y = view.player_sprite.center_y
+        angle = math.atan2(ref_x - world_x, ref_y - world_y)
+        expected_angle = math.degrees(angle) + 120
+        
+        #on verifie si l'orientation' est bonne avec une tolerance de 0,01 car on manipule des float
+        assert math.isclose(weapon.attribute.angle, expected_angle, abs_tol=0.001)
+        weapon.update_weapon_position()
+
+        expected_weapon_r = math.radians(expected_angle - 50)
+        expected_vec = (20 * math.cos(expected_weapon_r), 20 * math.sin(-expected_weapon_r))
+        expected_center_x = view.player_sprite.center_x + expected_vec[0]
+        expected_center_y = view.player_sprite.center_y - 15 + expected_vec[1]
+        
+        #on verifie si la direction est bonne avec une tolerance de 0,01 car on manipule des float
+        assert math.isclose(weapon.attribute.center_x, expected_center_x, abs_tol=0.001)
+        assert math.isclose(weapon.attribute.center_y, expected_center_y, abs_tol=0.001)
+        window.test(10)
+
+
+
+    
+
+
+

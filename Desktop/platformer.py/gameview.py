@@ -202,7 +202,7 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Chauve-souris":
             self.monster_list.append(sprite)
-            chauve_S = chauve_souris(sprite,-1, 100)
+            chauve_S = chauve_souris(sprite,-1, 100, 0.01)
             self.monster_TABLE.monsters.append(chauve_S)
         if type == "Blob":
             self.monster_list.append(sprite)
