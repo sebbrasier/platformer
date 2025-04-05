@@ -86,8 +86,6 @@ class chauve_souris(monster):
 
     #Fonction de déplacement des chauves-souris
     def monster_position(self, no_go_list: arcade.SpriteList[arcade.Sprite], wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
-        if random.random() < 0.01:
-    def monster_position(self, no_go_list: arcade.SpriteList, wall_list: arcade.SpriteList) -> None:
         if random.random() < self.random_dir:
             current_angle = math.atan2(self.vy, self.vx)
             delta_angle = random.gauss(60, math.pi / 60)
