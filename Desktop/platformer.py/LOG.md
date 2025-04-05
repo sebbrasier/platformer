@@ -39,8 +39,11 @@
 * [x] ajout des chauves_souris
 
 ### Semaine 6
+* [x] ajout de tests                                           
 
 ### Semaine 7
+* [x] ajout de tests                                           
+* [x] refactoring de notre façon de lire la map
 
 ### Semaine 8
 

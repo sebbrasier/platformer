@@ -200,3 +200,41 @@ def test_map_transition(window: arcade.Window) -> None:
     view.check_for_next_level()
     assert view.file_list.index == 1
     window.test(5)
+
+def test_bat(window : arcade.Window) -> None:
+
+    view = GameView()
+    view.setup("maps/map_tests/bat.txt")
+    window.show_view(view)
+
+    bat1 : chauve_souris
+    if isinstance(view.monster_TABLE.monsters[0],chauve_souris):
+        bat1 = view.monster_TABLE.monsters[0]
+
+
+    # on enlève l'effet aléatoire du mouvement de la chauve souris pour tester seulement si les bordures fonctionnent correctement
+    #test pour les bordures en x
+    bat1.random_dir = 0
+    bat1.boundary = 40
+    bat1.vx = 1
+    bat1.vy = 0
+
+    vitesse_initiale = bat1.vx
+    window.test(50)
+    # Après collision, on attend que la vitesse soit inversée.
+    assert bat1.speed == -vitesse_initiale
+
+    # test pour les bordures en y
+
+    bat1.vx = 0
+    bat1.vy = 1
+
+    vitesse_initiale = bat1.vy
+    window.test(50)
+    # Après collision, on attend que la vitesse soit inversée.
+    assert bat1.speed == -vitesse_initiale
+
+    
+
+
+
