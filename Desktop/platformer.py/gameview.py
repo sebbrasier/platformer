@@ -5,6 +5,7 @@ from typing import Final
 from abc import ABC, abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
+from All_items.interuptor import *
 from pyglet.math import Vec2
 import random
 
@@ -56,6 +57,11 @@ class GameView(arcade.View):
 
     arrow_list : arcade.SpriteList[arcade.Sprite]
     arrow_class_list : list[Arrow]
+    gate_list : arcade.SpriteList[arcade.Sprite]
+    inter_list : arcade.SpriteList[InterSprite]
+    inter_sprite_list : arcade.SpriteList[arcade.Sprite]
+
+
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     monster_TABLE : monster_table
@@ -115,6 +121,11 @@ class GameView(arcade.View):
         self.weapon_list = arcade.SpriteList()
         self.arrow_class_list = []
         self.monster_TABLE = monster_table([])
+        self.gate_list = arcade.SpriteList()
+        self.inter_list = arcade.SpriteList()
+        self.inter_sprite_list = arcade.SpriteList()
+
+
         
         MAP = lecture_map(MAP_file)
         #Création de la map
@@ -189,6 +200,14 @@ class GameView(arcade.View):
             self.player_sprite_list.append(self.player_sprite)
         if type == "Next_level":
             self.next_level_list.append(sprite)
+        if type == "gate":
+            self.gate_list.append(sprite)
+        if type == "inter":
+            self.inter_sprite_list.append(sprite)
+            inter_object = Inter(sprite)
+            inter_sprite = InterSprite(sprite, inter_ref=inter_object)  
+            self.inter_list.append(inter_sprite)
+
         
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
@@ -285,6 +304,9 @@ class GameView(arcade.View):
             self.weapon_list.draw()
             self.next_level_list.draw()
             self.arrow_list.draw()
+            self.gate_list.draw()
+            self.inter_sprite_list.draw()
+
             
         with self.UI_camera.activate():
             arcade.draw_text(f"SCORE: {self.coin_score.points}", 10,650, arcade.color.WHITE, 20,font_name="Kenney Future")
@@ -354,10 +376,19 @@ class GameView(arcade.View):
 
         #Check si les flèches touchent les monstres
         for arrows in self.arrow_class_list:
-            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list) is True:
+            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list,self.gate_list,self.inter_list) is True:
                 self.arrow_class_list.remove(arrows)
                 self.arrow_list.remove(arrows.attribute)
             arrows.check_hit_monsters(self.monster_list)
+        #verifie si on touche un interupteur
+        for inter in self.inter_list:
+            inter.update_inter()
+            if weapon.check_hit_inter(inter) == True:
+                inter.inter_ref.active = True
+        self.inter_sprite_list.update()
+        
+                
+
             
         #position du blob
         for monster in self.monster_TABLE.monsters:

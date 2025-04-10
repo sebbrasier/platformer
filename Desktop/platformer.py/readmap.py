@@ -16,6 +16,8 @@ class map_symbols(Enum):
     Lava = auto()
     Player = auto()
     Next_level = auto()
+    Inter = auto()
+    Gate = auto ()
     LEFT = auto()
     RIGHT = auto()
     UP = auto()
@@ -43,6 +45,10 @@ def char_to_map(char : str) -> map_symbols:
         return map_symbols.Player
     if char == "E":
         return map_symbols.Next_level
+    if char == "^":
+        return map_symbols.Inter
+    if char == "|":
+        return map_symbols.Gate
     else:
         print(char)
         raise Exception("Erreur: caractere inconnu")
@@ -70,6 +76,10 @@ def enum_to_sprite(char: map_symbols) -> tuple[str, str]:
         return ("Player", ":resources:/images/animated_characters/male_person/malePerson_idle.png")
     if char == map_symbols.Next_level:
         return ("Next_level", ":resources:/images/tiles/signExit.png")
+    if char == map_symbols.Inter:
+        return ("inter", ":resources:/images/tiles/leverLeft.png")
+    if char == map_symbols.Gate:
+        return ("gate", ":resources:/images/tiles/stoneCenter_rounded.png")
     else:
         print(char)
         raise Exception("Erreur: caractere inconnu")

@@ -4,6 +4,7 @@ import math
 from typing import Final
 from abc import ABC, abstractmethod
 from All_monsters.monsters import *
+from All_items.interuptor import *
 import random
 
 hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
@@ -46,6 +47,12 @@ class Weapon:
             for monster in monsters_hit:
                 monster.remove_from_sprite_lists()
                 arcade.play_sound(hit_sound)
+    def check_hit_inter(self,inter : InterSprite) ->bool:
+        if self.attribute.visible == True:
+            inter_hit = arcade.check_for_collision(self.attribute, inter)
+            return inter_hit
+        return False
+
             
 
 #Class pour l'épée qui hérite de Weapon
@@ -124,15 +131,22 @@ class Arrow(Weapon):
         pass
 
     #Fonction qui détecte les collisions avec la flèche
-    def arrow_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], monster_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> bool:
+    def arrow_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], monster_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite],gate_list :arcade.SpriteList[arcade.Sprite], inter_list : arcade.SpriteList[InterSprite]) -> bool:
         lava_hit = arcade.check_for_collision_with_list(self.attribute, no_go_list)
         monster_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
         wall_hit = arcade.check_for_collision_with_list(self.attribute, wall_list)
+        gate_hit = arcade.check_for_collision_with_list(self.attribute, gate_list)
+        inter_hit = arcade.check_for_collision_with_list(self.attribute, inter_list)
+
         for lava in lava_hit:
             return True
         for monster in monster_hit:
             return True
         for wall in wall_hit:
+            return True
+        for gate in gate_hit:
+            return True
+        for inter in inter_hit:
             return True
         if self.attribute.center_y <= (self.camera_position[1] - 720/2 ):
             return True
