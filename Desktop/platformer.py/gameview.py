@@ -40,32 +40,6 @@ class score:
         self.points = 0
 
 
-#fonction qui convertit les charactères de la map en un type de bloc et son asset:
-def char_to_sprite(char: str) -> tuple[str, str]:
-     if char == " ":
-          return (" ", " ")
-     if char == "=":
-          return ("Wall", ":resources:/images/tiles/grassMid.png")
-     if char == "-":
-          return ("Wall", ":resources:/images/tiles/grassHalf_mid.png")
-     if char == "x":
-          return ("Wall", ":resources:/images/tiles/boxCrate_double.png")
-     if char == "*":
-          return ("Coin", ":resources:/images/items/coinGold.png")
-     if char == "o":
-          return ("Blob", ":resources:/images/enemies/slimePurple.png")
-     if char == "v":
-          return ("Chauve-souris", "assets/kenney-extended-enemies-png/bat.png")
-     if char == "£":
-          return ("No-go", ":resources:/images/tiles/lava.png")
-     if char == "S":
-          return ("Player", ":resources:/images/animated_characters/male_person/malePerson_idle.png")
-     if char == "E":
-          return ("Next_level", ":resources:/images/tiles/signExit.png")
-     else:
-          raise Exception("Erreur: caractere inconnu")
-
-
 class GameView(arcade.View):
 
     #Initialisation de toutes les listes
@@ -147,13 +121,13 @@ class GameView(arcade.View):
         for i in  range(len(MAP)):
             for j in range(len(MAP[i])):
                 sprite = MAP[i][j] 
-                if char_to_sprite(sprite) != (" ", " "):
-                    asset = arcade.Sprite(char_to_sprite(sprite)[1],
+                if enum_to_sprite(sprite) != (" ", " "):
+                    asset = arcade.Sprite(enum_to_sprite(sprite)[1],
                         center_y = (len(MAP) - i) * Grid_size,
                         center_x = j * Grid_size,
                         scale = 0.5
                     )
-                    self.sprite_type(char_to_sprite(sprite)[0], asset)
+                    self.sprite_type(enum_to_sprite(sprite)[0], asset)
                 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
