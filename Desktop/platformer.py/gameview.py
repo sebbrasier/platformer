@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
 from pyglet.math import Vec2
+from moving_platform import *
 import random
 
 #Variables globales
@@ -53,7 +54,11 @@ class GameView(arcade.View):
     monster_list : arcade.SpriteList[arcade.Sprite]
     weapon_icon_list : arcade.SpriteList[arcade.Sprite]
     weapon_list : arcade.SpriteList[arcade.Sprite] 
+    #Initialisation des listes pour stocker les sprites ainsi que la classe de platformes
+    platform_list : arcade.SpriteList[arcade.Sprite]
+    platform_class_list : list[moving_platform]
 
+    #Initialisation des listes pour stocker les sprites ainsi que la classe des flèches
     arrow_list : arcade.SpriteList[arcade.Sprite]
     arrow_class_list : list[Arrow]
 
@@ -113,27 +118,53 @@ class GameView(arcade.View):
         self.player_sprite_list = arcade.SpriteList()
         self.arrow_list = arcade.SpriteList()
         self.weapon_list = arcade.SpriteList()
+        self.platform_list = arcade.SpriteList()
+        self.platform_class_list = []
         self.arrow_class_list = []
         self.monster_TABLE = monster_table([])
         
-        MAP = lecture_map(MAP_file)
+        MAP = Map(dim(MAP_file), lecture_map(MAP_file))
         #Création de la map
-        for i in  range(len(MAP)):
-            for j in range(len(MAP[i])):
-                sprite = MAP[i][j] 
+        #On place les sprites au bon endroit
+        #Ajout des platformes qui bougent
+        moving_arrow_dict_RIGHT = read_arrows_right(MAP, map_symbols.RIGHT)
+        moving_arrow_dict_LEFT = read_arrows_right(flip_matrix(MAP), map_symbols.LEFT)
+        moving_arrow_dict_DOWN = read_arrows_right(transpose_matrix(MAP), map_symbols.DOWN)
+        moving_arrow_dict_UP = read_arrows_right(flip_matrix(transpose_matrix(MAP)), map_symbols.UP)
+        for i in  range(len(MAP.setup)):
+            for j in range(len(MAP.setup[i])):
+                sprite = MAP.setup[i][j] 
                 if enum_to_sprite(sprite) != (" ", " "):
+                    #Créer un sprite par rapport au (i, j)ième élément de la map
                     asset = arcade.Sprite(enum_to_sprite(sprite)[1],
-                        center_y = (len(MAP) - i) * Grid_size,
+                        center_y = (len(MAP.setup) - i) * Grid_size,
                         center_x = j * Grid_size,
                         scale = 0.5
                     )
-                    self.sprite_type(enum_to_sprite(sprite)[0], asset)
-                
+                    #Ranger les platformes dans la bonne catégorie selon leur "type" (La manière dont elles bougent)
+                    if (i, j) in moving_arrow_dict_RIGHT:
+                        self.platform_list.append(asset)
+                        self.platform_class_list.append(moving_platform_x(asset, 1,  moving_arrow_dict_RIGHT[(i,j)]))
+                    if (i, MAP.dim[0] - (j+1)) in moving_arrow_dict_LEFT:
+                        self.platform_list.append(asset)
+                        self.platform_class_list.append(moving_platform_x(asset,  -1,  moving_arrow_dict_LEFT[(i, MAP.dim[0] - (j+1))]))
+                    if (j, i) in moving_arrow_dict_DOWN:
+                        self.platform_list.append(asset)
+                        self.platform_class_list.append(moving_platform_y(asset, -1,  moving_arrow_dict_DOWN[(j,i)]))
+                    if (j, MAP.dim[1] - (i+1)) in moving_arrow_dict_UP:
+                        self.platform_list.append(asset)
+                        self.platform_class_list.append(moving_platform_y(asset, 1,  moving_arrow_dict_UP[(j, MAP.dim[1] - (i+1))]))
+                    else:
+                        self.sprite_type(enum_to_sprite(sprite)[0], asset)
+        
+        #Physics engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
+            platforms=self.platform_list,
             walls = self.wall_list,
             gravity_constant=PLAYER_GRAVITY,
         )
+
         #initialisation de la caméra
         self.camera = arcade.camera.Camera2D()
         self.UI_camera = arcade.camera.Camera2D()
@@ -279,6 +310,7 @@ class GameView(arcade.View):
         with self.camera.activate():
             self.player_sprite_list.draw()
             self.wall_list.draw()
+            self.platform_list.draw()
             self.no_go_list.draw()
             self.coin_list.draw()
             self.monster_list.draw()
@@ -364,10 +396,14 @@ class GameView(arcade.View):
             monster.monster_position(self.no_go_list, self.wall_list)
 
         self.monster_list.update()
-                    
+
+        for elements in self.platform_class_list:
+            elements.move()
+
 
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
         self.game_over(self.monster_list)
+
 
 

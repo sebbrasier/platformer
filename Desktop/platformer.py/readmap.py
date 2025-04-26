@@ -43,6 +43,14 @@ def char_to_map(char : str) -> map_symbols:
         return map_symbols.Player
     if char == "E":
         return map_symbols.Next_level
+    if char == "→":
+        return map_symbols.RIGHT
+    if char == "←":
+        return map_symbols.LEFT
+    if char == "↓":
+        return map_symbols.DOWN
+    if char == "↑":
+        return map_symbols.UP
     else:
         print(char)
         raise Exception("Erreur: caractere inconnu")
@@ -50,7 +58,7 @@ def char_to_map(char : str) -> map_symbols:
 
 #fonction qui convertit les charactères de la map en un type de bloc et son asset:
 def enum_to_sprite(char: map_symbols) -> tuple[str, str]:
-    if char == map_symbols.Space:
+    if char == map_symbols.Space or char == map_symbols.RIGHT or char == map_symbols.LEFT or char == map_symbols.DOWN or char == map_symbols.UP:
         return (" ", " ")
     if char == map_symbols.Grass_tile:
         return ("Wall", ":resources:/images/tiles/grassMid.png")
@@ -72,7 +80,8 @@ def enum_to_sprite(char: map_symbols) -> tuple[str, str]:
         return ("Next_level", ":resources:/images/tiles/signExit.png")
     else:
         print(char)
-        raise Exception("Erreur: caractere inconnu")
+        raise ValueError("Erreur: caractere inconnu")
+    
     
 
 #Fonction pour stocker un str dans une matrice avec 1  char par coefficient
