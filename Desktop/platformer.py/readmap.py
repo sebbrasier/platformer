@@ -1,8 +1,164 @@
 import arcade
-from typing import Final
+from typing import Dict, Any, List, Tuple, Final,Callable
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Final
+import yaml
+from typing import Tuple
+from All_items.interuptor import *
+from All_items.gate import *
+from typing import Optional
+
+
+# separation de la map en une partie yaml et une de la map classique
+def split_map_file(filepath: str) -> Tuple[str, str]:
+    try:
+        with open(filepath, 'r', encoding='utf-8', newline='\n') as f:
+            content = f.read()
+    except OSError as e:
+        raise RuntimeError(f"Impossible de lire le fichier {filepath}: {e}")
+
+    parts = content.split('---', 1)
+    if len(parts) < 2:
+        raise ValueError("Le fichier ne contient pas le séparateur '---'.")
+
+    yaml_part = parts[0].strip()
+    map_part = parts[1].strip()
+    return (yaml_part, map_part)
+
+
+# lecture de la partie yaml
+
+def load_map_config(filepath: str) -> Dict[str, Any]:
+    """
+    Lit la partie YAML d'un fichier de map et renvoie la config.
+    """
+    with open(filepath, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+
+    if not isinstance(config, dict):
+        raise TypeError("Le fichier YAML doit contenir un dictionnaire racine.")
+    if 'width' not in config or 'height' not in config:
+        raise KeyError("La config YAML doit contenir 'width' et 'height'.")
+    return config
+
+
+def init_gate_states_from_config(
+    config: Dict[str, Any],
+    gate_list: List[Gate],
+    wall_list: arcade.SpriteList[arcade.Sprite]
+) -> None:
+    """
+    Initialise l'état de chaque Gate (open/closed) selon le YAML.
+    """
+    gate_dict: Dict[Tuple[int,int], Gate] = {(g.x, g.y): g for g in gate_list}
+    for gdata in config.get('gates', []):
+        gx, gy = int(gdata['x']), int(gdata['y'])
+        state = gdata.get('state', 'closed')
+        if (gx, gy) not in gate_dict:
+            raise ValueError(f"Aucun portail à la position ({gx},{gy}).")
+        gate = gate_dict[(gx, gy)]
+        if state == 'open':
+            gate.open(wall_list)
+        elif state == 'closed':
+            gate.close(wall_list)
+        else:
+            raise ValueError(f"État portail inconnu: {state}")
+
+
+def link_inter_to_gates(
+    config: Dict[str, Any],
+    inter_list: List[Inter],
+    gate_list: List[Gate],
+    wall_list: arcade.SpriteList[arcade.Sprite],
+) -> None:
+    # 1) Construire dict[(x,y) → Gate]
+    gate_dict: Dict[Tuple[int, int], Gate] = {
+        (g.x, g.y): g for g in gate_list
+    }
+
+    for sw in config.get("switches", []):
+        sx, sy = int(sw["x"]), int(sw["y"])
+        inter_opt = next(
+            (i for i in inter_list if (i.x, i.y) == (sx, sy)),
+            None
+        )
+        if inter_opt is None:
+            raise ValueError(f"Aucun interrupteur à la position ({sx},{sy})")
+        inter: Inter = inter_opt  # narrow type for MyPy
+
+        # Réinitialiser état et listes d’actions
+        inter.state = States[sw.get("state", "off")]
+        inter.actions_on.clear()
+        inter.actions_off.clear()
+
+        # ===== switch_on =====
+        for ac in sw.get("switch_on", []):
+            action = ac["action"]
+            if action == "disable":
+                def disable_fn(i: Inter = inter) -> None:
+                    i.disable = True
+                inter.actions_on.append(disable_fn)
+
+            else:
+                ax, ay = int(ac["x"]), int(ac["y"])
+                if (ax, ay) not in gate_dict:
+                    raise ValueError(f"Aucun portail trouvé à ({ax},{ay})")
+                gate_ref: Gate = gate_dict[(ax, ay)]
+
+                if action == "open-gate":
+                    def on_open_fn(
+                        g: Gate = gate_ref,
+                        wl: arcade.SpriteList[arcade.Sprite] = wall_list
+                    ) -> None:
+                        g.open(wl)
+                    inter.actions_on.append(on_open_fn)
+
+                elif action == "close-gate":
+                    def on_close_fn(
+                        g: Gate = gate_ref,
+                        wl: arcade.SpriteList[arcade.Sprite] = wall_list
+                    ) -> None:
+                        g.close(wl)
+                    inter.actions_on.append(on_close_fn)
+
+                else:
+                    raise ValueError(f"Action inconnue dans switch_on: {action}")
+
+        # ===== switch_off =====
+        for ac in sw.get("switch_off", []):
+            action = ac["action"]
+            if action == "disable":
+                def disable_fn(i: Inter = inter) -> None:
+                    i.disable = True
+                inter.actions_off.append(disable_fn)
+
+            else:
+                ax, ay = int(ac["x"]), int(ac["y"])
+                if (ax, ay) not in gate_dict:
+                    raise ValueError(f"Aucun portail trouvé à ({ax},{ay})")
+                gate_ref2: Gate = gate_dict[(ax, ay)]
+
+                if action == "open-gate":
+                    def off_open_fn(
+                        g: Gate = gate_ref2,
+                        wl: arcade.SpriteList[arcade.Sprite] = wall_list
+                    ) -> None:
+                        g.open(wl)
+                    inter.actions_off.append(off_open_fn)
+
+                elif action == "close-gate":
+                    def off_close_fn(
+                        g: Gate = gate_ref2,
+                        wl: arcade.SpriteList[arcade.Sprite] = wall_list
+                    ) -> None:
+                        g.close(wl)
+                    inter.actions_off.append(off_close_fn)
+
+                else:
+                    raise ValueError(f"Action inconnue dans switch_off: {action}")
+
+
+
 
 #Faire un enum pour stocker les éléments de la map
 class map_symbols(Enum):

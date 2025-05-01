@@ -1,0 +1,16 @@
+width: 20
+height: 6
+
+switches:
+  - x: 0
+    y: 5
+
+    switch_on:
+      - action: open-gate
+        x: 0
+        y: 6
+      - action: disable
+gates:
+  - x: 0
+    y: 6
+    state: open

@@ -1,28 +1,45 @@
 import arcade
-from typing import Any
+from enum import Enum, auto
+from typing import Callable
+
+class States(Enum):
+    on = auto()
+    off = auto()
 
 class Inter :
     sprite: arcade.Sprite
+    state : States
+    actions_on: list[Callable[[], None]]
+    actions_off: list[Callable[[], None]]
+    disable : bool
+    x :int
+    y:int
 
-    def __init__(self, sprite : arcade.Sprite) -> None :
+    def __init__(self, sprite : arcade.Sprite,state : States,x :int,y:int) -> None :
         self.sprite = sprite
-        self.active = False
-    
-    def appearance(self) -> None :
-        if self.active == True:
+        self.state = state
+        self.x=x
+        self.y =y
+        self.actions_on  = []
+        self.actions_off = []
+        self.disable = False
+
+    def trigger(self) -> None:
+        if self.disable == True:
+            return None
+        
+        if self.state == States.off:
             self.sprite.texture = arcade.load_texture(":resources:/images/tiles/leverRight.png")
-        else:
+            for action in self.actions_on :
+                action()
+            self.state = States.on
+        else: 
             self.sprite.texture = arcade.load_texture(":resources:/images/tiles/leverLeft.png")
+            for action in self.actions_off :
+                action()
+            self.state = States.off
 
 
+            
 
-class InterSprite(arcade.Sprite):
-    inter_ref: Inter 
-
-    def __init__(self, *args : Any,inter_ref: Inter, **kwargs : Any) -> None:
-        super().__init__(*args, **kwargs, )
-        self.inter_ref: Inter = inter_ref
-    
-    def update_inter(self) -> None:
-        self.inter_ref.appearance()
     
