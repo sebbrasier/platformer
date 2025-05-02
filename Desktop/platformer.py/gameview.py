@@ -5,6 +5,8 @@ from typing import Final
 from abc import ABC, abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
+from All_items.interuptor import *
+from All_items.gate import *
 from pyglet.math import Vec2
 from moving_platform import *
 import random
@@ -61,6 +63,12 @@ class GameView(arcade.View):
     #Initialisation des listes pour stocker les sprites ainsi que la classe des flèches
     arrow_list : arcade.SpriteList[arcade.Sprite]
     arrow_class_list : list[Arrow]
+    gate_list : arcade.SpriteList[arcade.Sprite]
+    inter_list : arcade.SpriteList[arcade.Sprite]
+    inter_class_list :list[Inter]
+    gate_class_list : list[Gate]
+
+
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     monster_TABLE : monster_table
@@ -105,6 +113,9 @@ class GameView(arcade.View):
         self.setup(self.file_list.Maps[self.file_list.index])
 
     def setup(self, MAP_file : str) -> None:
+    
+        config  = load_map_config(MAP_file)
+
         """Set up the game here."""
         PLAYER_GRAVITY = 1
 
@@ -122,6 +133,12 @@ class GameView(arcade.View):
         self.platform_class_list = []
         self.arrow_class_list = []
         self.monster_TABLE = monster_table([])
+        self.gate_list = arcade.SpriteList()
+        self.inter_list = arcade.SpriteList()
+        self.inter_class_list = []
+        self.gate_class_list = []
+
+
         
         MAP = Map(dim(MAP_file), lecture_map(MAP_file))
         #Ajout des platformes qui bougent
@@ -139,17 +156,20 @@ class GameView(arcade.View):
         #On place les sprites au bon endroit
         for i in  range(len(MAP.setup)):
             for j in range(len(MAP.setup[i])):
-                sprite = MAP.setup[i][j] 
-                if enum_to_sprite(sprite) != (" ", " "):
-                    #Créer un sprite par rapport au (i, j)ième élément de la map
-                    asset = arcade.Sprite(enum_to_sprite(sprite)[1],
-                        center_y = (len(MAP.setup) - i) * Grid_size,
-                        center_x = j * Grid_size,
-                        scale = 0.5
-                    )
-                    if (i, j) not in platform_set:
-                       self.sprite_type(enum_to_sprite(sprite)[0], asset)
-        
+                if (i, j) not in platform_set:
+                    #self.sprite_type(enum_to_sprite(sprite)[0], asset)
+                    sprite = MAP.setup[i][j] 
+                    if enum_to_sprite(sprite) != (" ", " "):
+                        #Créer un sprite par rapport au (i, j)ième élément de la map
+                        asset = arcade.Sprite(enum_to_sprite(sprite)[1],
+                            center_y = (len(MAP.setup) - i) * Grid_size,
+                            center_x = j * Grid_size,
+                            scale = 0.5
+                        )
+                        map_x = j
+                        map_y = len(MAP) - 1 - i
+                        self.sprite_type(enum_to_sprite(sprite)[0], asset, map_x, map_y)
+         
         #Physics engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             player_sprite=  self.player_sprite,
@@ -157,6 +177,11 @@ class GameView(arcade.View):
             walls = self.wall_list,
             gravity_constant=PLAYER_GRAVITY,
         )
+
+        #rajout des interrupteurs
+        self.wall_list.extend(self.gate_list)  
+        init_gate_states_from_config(config,self.gate_class_list,self.wall_list)
+        link_inter_to_gates(config,self.inter_class_list,self.gate_class_list,self.wall_list)     
 
         #initialisation de la caméra
         self.camera = arcade.camera.Camera2D()
@@ -236,7 +261,7 @@ class GameView(arcade.View):
              self.setup(self.file_list.Maps[self.file_list.index])
     
      #Ranger les sprites dans la bonne liste selon son asset
-    def sprite_type(self, type : str, sprite: arcade.Sprite) -> None:
+    def sprite_type(self, type: str, sprite: arcade.Sprite, map_x: int, map_y: int) -> None:
         if type == "Wall":
             self.wall_list.append(sprite)
         if type == "Coin":
@@ -256,6 +281,16 @@ class GameView(arcade.View):
             self.player_sprite_list.append(self.player_sprite)
         if type == "Next_level":
             self.next_level_list.append(sprite)
+        if type == "gate":
+            gate = Gate(sprite,map_x, map_y)
+            self.gate_list.append(sprite)
+            self.gate_class_list.append(gate)
+        if type == "inter": 
+            lever = Inter(sprite,States.off,map_x,map_y)
+            self.inter_list.append(lever.sprite)        
+            self.inter_class_list.append(lever)
+
+
         
     #Variables booléennes qui détectent quand les touches sont appuyées
     key_right : bool = False
@@ -349,10 +384,13 @@ class GameView(arcade.View):
             self.platform_list.draw()
             self.no_go_list.draw()
             self.coin_list.draw()
-            self.monster_list.draw()
             self.weapon_list.draw()
             self.next_level_list.draw()
             self.arrow_list.draw()
+            self.gate_list.draw()
+            self.inter_list.draw()
+            self.monster_list.draw()
+
             
         with self.UI_camera.activate():
             arcade.draw_text(f"SCORE: {self.coin_score.points}", 10,650, arcade.color.WHITE, 20,font_name="Kenney Future")
@@ -420,13 +458,23 @@ class GameView(arcade.View):
             arrow.change_y -= 1.5
         self.arrow_list.update()
 
-        #Check si les flèches touchent les monstres
+       
+        #check si on touche un interupteur
+        
+        for inter in self.inter_class_list:
+            if weapon.check_hit_inter(inter.sprite) == True and self.active_weapon.index == 0:
+                inter.trigger()
+            for arrows in self.arrow_class_list:
+                if arrows.check_hit_inter(inter.sprite) == True:
+                    inter.trigger()
+            
+         #Check si les flèches touchent les monstres
         for arrows in self.arrow_class_list:
-            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list, self.platform_list) is True:
+            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list, self.platform_list, self.inter_list) is True:
                 self.arrow_class_list.remove(arrows)
                 self.arrow_list.remove(arrows.attribute)
             arrows.check_hit_monsters(self.monster_list)
-            
+        
         #position du blob
         for monster in self.monster_TABLE.monsters:
             monster.monster_position(self.no_go_list, self.wall_list)
@@ -435,6 +483,8 @@ class GameView(arcade.View):
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
         self.game_over(self.monster_list)
+        # reintialise le can_kill a False pour que l'épée puisse faire des actions seulement pendant l'image du clic
+        Sword.can_kill = False
 
 
 
