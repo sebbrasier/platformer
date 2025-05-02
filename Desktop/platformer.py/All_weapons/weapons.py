@@ -124,15 +124,19 @@ class Arrow(Weapon):
         pass
 
     #Fonction qui détecte les collisions avec la flèche
-    def arrow_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], monster_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> bool:
+    def arrow_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], monster_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite],
+                        platforms : arcade.SpriteList[arcade.Sprite]) -> bool:
         lava_hit = arcade.check_for_collision_with_list(self.attribute, no_go_list)
         monster_hit = arcade.check_for_collision_with_list(self.attribute, monster_list)
         wall_hit = arcade.check_for_collision_with_list(self.attribute, wall_list)
+        platform_hit = arcade.check_for_collision_with_list(self.attribute, platforms)
         for lava in lava_hit:
             return True
         for monster in monster_hit:
             return True
         for wall in wall_hit:
+            return True
+        for plat in platform_hit:
             return True
         if self.attribute.center_y <= (self.camera_position[1] - 720/2 ):
             return True

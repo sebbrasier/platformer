@@ -124,13 +124,19 @@ class GameView(arcade.View):
         self.monster_TABLE = monster_table([])
         
         MAP = Map(dim(MAP_file), lecture_map(MAP_file))
+        #Ajout des platformes qui bougent
+        moving_arrow_dict_RIGHT = read_arrows_right(MAP, map_symbols.RIGHT, lambda a, b : a)
+        moving_arrow_dict_LEFT = read_arrows_right(flip_matrix(MAP), map_symbols.LEFT, flip_vector)
+        horizontal = combine_right_left(moving_arrow_dict_LEFT, moving_arrow_dict_RIGHT, MAP)
+        moving_arrow_dict_DOWN = read_arrows_right(transpose_matrix(MAP), map_symbols.DOWN, transpose_vec)
+        moving_arrow_dict_UP = read_arrows_right(flip_matrix(transpose_matrix(MAP)), map_symbols.UP, flip_transpose_vec)
+        vertical = combine_right_left(moving_arrow_dict_DOWN, moving_arrow_dict_UP, MAP)
+        platform_set = {a for e in horizontal for a in e} | {a for e in vertical for a in e}
+        #On rajoute tout d'abord toutes les platformes
+        self.add_platform_x(horizontal, MAP)
+        self.add_platform_y(vertical, MAP)
         #Création de la map
         #On place les sprites au bon endroit
-        #Ajout des platformes qui bougent
-        moving_arrow_dict_RIGHT = read_arrows_right(MAP, map_symbols.RIGHT)
-        moving_arrow_dict_LEFT = read_arrows_right(flip_matrix(MAP), map_symbols.LEFT)
-        moving_arrow_dict_DOWN = read_arrows_right(transpose_matrix(MAP), map_symbols.DOWN)
-        moving_arrow_dict_UP = read_arrows_right(flip_matrix(transpose_matrix(MAP)), map_symbols.UP)
         for i in  range(len(MAP.setup)):
             for j in range(len(MAP.setup[i])):
                 sprite = MAP.setup[i][j] 
@@ -141,25 +147,12 @@ class GameView(arcade.View):
                         center_x = j * Grid_size,
                         scale = 0.5
                     )
-                    #Ranger les platformes dans la bonne catégorie selon leur "type" (La manière dont elles bougent)
-                    if (i, j) in moving_arrow_dict_RIGHT:
-                        self.platform_list.append(asset)
-                        self.platform_class_list.append(moving_platform_x(asset, 1,  moving_arrow_dict_RIGHT[(i,j)]))
-                    if (i, MAP.dim[0] - (j+1)) in moving_arrow_dict_LEFT:
-                        self.platform_list.append(asset)
-                        self.platform_class_list.append(moving_platform_x(asset,  -1,  moving_arrow_dict_LEFT[(i, MAP.dim[0] - (j+1))]))
-                    if (j, i) in moving_arrow_dict_DOWN:
-                        self.platform_list.append(asset)
-                        self.platform_class_list.append(moving_platform_y(asset, -1,  moving_arrow_dict_DOWN[(j,i)]))
-                    if (j, MAP.dim[1] - (i+1)) in moving_arrow_dict_UP:
-                        self.platform_list.append(asset)
-                        self.platform_class_list.append(moving_platform_y(asset, 1,  moving_arrow_dict_UP[(j, MAP.dim[1] - (i+1))]))
-                    else:
-                        self.sprite_type(enum_to_sprite(sprite)[0], asset)
+                    if (i, j) not in platform_set:
+                       self.sprite_type(enum_to_sprite(sprite)[0], asset)
         
         #Physics engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite,
+            player_sprite=  self.player_sprite,
             platforms=self.platform_list,
             walls = self.wall_list,
             gravity_constant=PLAYER_GRAVITY,
@@ -191,6 +184,49 @@ class GameView(arcade.View):
             icon.visible = False
         self.weapon_icon_list[self.active_weapon.index].visible = True
 
+    #Fonction qui rajoute toutes les platformes verticales
+    def add_platform_x(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
+        for a in platforms:
+            sequence = platforms[a]
+            for vec in a:
+                i = vec[0]
+                j = vec[1]
+                sprite = MAP.setup[i][j] 
+                if enum_to_sprite(sprite) != (" ", " "):
+                    #Créer un sprite par rapport au (i, j)ième élément de la map
+                    asset = arcade.Sprite(enum_to_sprite(sprite)[1],
+                        center_y = (len(MAP.setup) - i) * Grid_size,
+                        center_x = j * Grid_size,
+                        scale = 0.5
+                    )
+                    asset_class = moving_platform_x(asset, 1, sequence[1], sequence[0])
+                    asset_class.platform.boundary_right = asset_class.boundary_right
+                    asset_class.platform.boundary_left = asset_class.boundary_left
+                    asset_class.platform.change_x = asset_class.speed
+                    self.platform_list.append(asset_class.platform)
+                    self.platform_class_list.append(asset_class)
+    
+    #Fonction qui rajoute les platformes horizontales
+    def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
+        for a in platforms:
+            sequence = platforms[a]
+            for vec in a:
+                i = vec[0]
+                j = vec[1]
+                sprite = MAP.setup[i][j] 
+                if enum_to_sprite(sprite) != (" ", " "):
+                    #Créer un sprite par rapport au (i, j)ième élément de la map
+                    asset = arcade.Sprite(enum_to_sprite(sprite)[1],
+                        center_y = (len(MAP.setup) - i) * Grid_size,
+                        center_x = j * Grid_size,
+                        scale = 0.5
+                    )
+                    asset_class = moving_platform_y(asset, 1, sequence[1], sequence[0])
+                    asset_class.platform.boundary_top = asset_class.boundary_right
+                    asset_class.platform.boundary_bottom = asset_class.boundary_left
+                    asset_class.platform.change_y = asset_class.speed
+                    self.platform_list.append(asset_class.platform)
+                    self.platform_class_list.append(asset_class)
     
     #Fonction qui détecte si le joueur collisionne avec le paneau
     def check_for_next_level(self) -> None:
@@ -270,7 +306,7 @@ class GameView(arcade.View):
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
-        PLAYER_MOVEMENT_SPEED = 3
+        PLAYER_MOVEMENT_SPEED = 6
         PLAYER_JUMP_SPEED = 18
         
         if key == arcade.key.RIGHT:
@@ -356,8 +392,8 @@ class GameView(arcade.View):
             
     """Main in-game view."""
     def on_update(self, delta_time: float) -> None:
-        self.player_sprite.center_x += self.player_sprite.change_x
         self.physics_engine.update()
+        self.monster_list.update()
 
         self.check_for_next_level()
         self.cam_control()
@@ -386,7 +422,7 @@ class GameView(arcade.View):
 
         #Check si les flèches touchent les monstres
         for arrows in self.arrow_class_list:
-            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list) is True:
+            if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list, self.platform_list) is True:
                 self.arrow_class_list.remove(arrows)
                 self.arrow_list.remove(arrows.attribute)
             arrows.check_hit_monsters(self.monster_list)
@@ -394,11 +430,6 @@ class GameView(arcade.View):
         #position du blob
         for monster in self.monster_TABLE.monsters:
             monster.monster_position(self.no_go_list, self.wall_list)
-
-        self.monster_list.update()
-
-        for elements in self.platform_class_list:
-            elements.move()
 
 
         #Detection de la collision avec la lave et les blobs:
