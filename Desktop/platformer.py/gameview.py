@@ -286,7 +286,7 @@ class GameView(arcade.View):
             self.gate_list.append(sprite)
             self.gate_class_list.append(gate)
         if type == "inter": 
-            lever = Inter(sprite,States.off,map_x,map_y)
+            lever = Inter(sprite,False,map_x,map_y)
             self.inter_list.append(lever.sprite)        
             self.inter_class_list.append(lever)
 

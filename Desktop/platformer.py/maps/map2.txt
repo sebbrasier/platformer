@@ -1,11 +1,30 @@
-width: 17
-height: 7
+width: 20
+height: 6
+
+switches:
+  - x: 4
+    y: 1
+    switch_off:
+      - action: close-gate
+        x: 5
+        y: 1
+    switch_on:
+      - action: open-gate
+        x: 5
+        y: 1
+  - x: 1
+    y: 5
+    switch_on:
+      - action: open-gate
+        x: 8
+        y: 6
+      - action : disable
 ---
- *v  -£- v -- x
----   o       x-
-     ---      x*o
-         -£  ----
-   S   -          vE
-==£=£= ↓         ===
-       ↓
----    
+       v|
+*^ v -  -  v 
+---     ←←←---→→→
+     o*      
+    ---        -
+ S  ^|        *o   x*E
+======£££££===========
+---

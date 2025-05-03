@@ -86,7 +86,9 @@ def link_inter_to_gates(
         inter: Inter = inter_opt  # narrow type for MyPy
 
         # Réinitialiser état et listes d’actions
-        inter.state = States[sw.get("state", "off")]
+        raw = sw.get("state", False)
+        inter.state = bool(raw) if isinstance(raw, bool) else (str(raw).lower() == "on")
+
         inter.actions_on.clear()
         inter.actions_off.clear()
 
