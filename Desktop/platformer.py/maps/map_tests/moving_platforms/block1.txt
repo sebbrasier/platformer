@@ -1,0 +1,13 @@
+width: 8
+height: 9
+---
+xxxxx
+= = =→→
+xx-= 
+£ £-=
+x  xx
+-  = 
+
+S
+=
+---

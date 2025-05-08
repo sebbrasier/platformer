@@ -9,6 +9,7 @@ from All_items.gate import *
 from typing import Optional
 
 
+
 # separation de la map en une partie yaml et une de la map classique
 def split_map_file(filepath: str) -> Tuple[str, str]:
     try:
@@ -261,7 +262,8 @@ def str_to_matrix(file : str, width : int) -> list[list[str]]:
             ligne.append(" ")
         tableau.append(ligne)
     
-    return tableau[0:-1]
+    return tableau[1:-1]
+
 
 
 #Ouverture et lecture du fichier "map" pour ensuite la placer dans une matrice

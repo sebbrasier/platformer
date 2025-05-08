@@ -107,7 +107,7 @@ class GameView(arcade.View):
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
 
         #Initialisation des listes de fichiers
-        self.file_list = Map_list(["maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)
+        self.file_list = Map_list([ "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
 
         # Setup our game
         self.setup(self.file_list.Maps[self.file_list.index])
@@ -142,13 +142,15 @@ class GameView(arcade.View):
         
         MAP = Map(dim(MAP_file), lecture_map(MAP_file))
         #Ajout des platformes qui bougent
-        moving_arrow_dict_RIGHT = read_arrows_right(MAP, map_symbols.RIGHT, lambda a, b : a)
-        moving_arrow_dict_LEFT = read_arrows_right(flip_matrix(MAP), map_symbols.LEFT, flip_vector)
-        horizontal = combine_right_left(moving_arrow_dict_LEFT, moving_arrow_dict_RIGHT, MAP)
-        moving_arrow_dict_DOWN = read_arrows_right(transpose_matrix(MAP), map_symbols.DOWN, transpose_vec)
-        moving_arrow_dict_UP = read_arrows_right(flip_matrix(transpose_matrix(MAP)), map_symbols.UP, flip_transpose_vec)
-        vertical = combine_right_left(moving_arrow_dict_DOWN, moving_arrow_dict_UP, MAP)
-        platform_set = {a for e in horizontal for a in e} | {a for e in vertical for a in e}
+        moving_arrow_dict_RIGHT = AddPlatform.read_arrows_right(MAP, map_symbols.RIGHT, lambda a, b : a)
+        moving_arrow_dict_LEFT = AddPlatform.read_arrows_right(LinAlgebra.flip_matrix(MAP), map_symbols.LEFT, LinAlgebra.flip_vector)
+        horizontal = AddPlatform.combine_right_left(moving_arrow_dict_LEFT, moving_arrow_dict_RIGHT, MAP)
+        moving_arrow_dict_DOWN = AddPlatform.read_arrows_right(LinAlgebra.transpose_matrix(MAP), map_symbols.DOWN, LinAlgebra.transpose_vec)
+        moving_arrow_dict_UP = AddPlatform.read_arrows_right(LinAlgebra.flip_matrix(LinAlgebra.transpose_matrix(MAP)), map_symbols.UP, LinAlgebra.flip_transpose_vec)
+        vertical = AddPlatform.combine_right_left(moving_arrow_dict_DOWN, moving_arrow_dict_UP, MAP)
+        #Check pour des erreurs
+        AddPlatform.duplicate_checker(horizontal, vertical)
+        platform_set : set[tuple[int, int]] = {a for e in horizontal for a in e} | {a for e in vertical for a in e}
         #On rajoute tout d'abord toutes les platformes
         self.add_platform_x(horizontal, MAP)
         self.add_platform_y(vertical, MAP)
@@ -180,6 +182,7 @@ class GameView(arcade.View):
 
         #rajout des interrupteurs
         self.wall_list.extend(self.gate_list)  
+        
         init_gate_states_from_config(config,self.gate_class_list,self.wall_list)
         link_inter_to_gates(config,self.inter_class_list,self.gate_class_list,self.wall_list)     
 
@@ -230,6 +233,7 @@ class GameView(arcade.View):
                     asset_class.platform.change_x = asset_class.speed
                     self.platform_list.append(asset_class.platform)
                     self.platform_class_list.append(asset_class)
+                    
     
     #Fonction qui rajoute les platformes horizontales
     def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:

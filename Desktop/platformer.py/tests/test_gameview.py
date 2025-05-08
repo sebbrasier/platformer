@@ -36,22 +36,53 @@ def test_jump(window: arcade.Window) -> None:
     window.test(30)
 
 #test camera follow character
+
 def test_camera(window: arcade.Window) -> None:
     view = GameView()
     view.setup("maps/map_tests/camera.txt")
     window.show_view(view)
 
+    #Gauche
     cam_i = view.camera.position[0]
     left_edge = cam_i - (WINDOW_WIDTH / 2) + 410
-    view.on_key_press(arcade.key.LEFT, 0)
-    window.test(50)
-    view.on_key_release(arcade.key.LEFT, 0)
+    window.test(20)
+    view.player_sprite.center_x -= 600
+    window.test(20)
     player_x = view.player_sprite.center_x
     cam_f = view.camera.position[0]
     assert (cam_f == cam_i - abs(player_x - left_edge))
-    window.test(50)
 
-#test character sprite keeps moving after one key is released
+    #Droite
+    cam_i = view.camera.position[0]
+    right_edge = cam_i + (WINDOW_WIDTH / 2) - 410  
+    window.test(20)
+    view.player_sprite.center_x += 600
+    window.test(20)
+    player_x = view.player_sprite.center_x
+    cam_f = view.camera.position[0]
+    assert cam_f == cam_i + abs(player_x - right_edge)
+
+    # Haut 
+    cam_i = view.camera.position[1]
+    upper_edge = cam_i + (WINDOW_HEIGHT / 2) - 300
+    window.test(20)
+    view.player_sprite.center_y += 400
+    window.test(1)
+    player_y = view.player_sprite.center_y
+    cam_f = view.camera.position[1]
+    assert cam_f == cam_i + abs(player_y - upper_edge)
+    window.test(20)
+
+    # Bas 
+    cam_i = view.camera.position[1]
+    down_edge = cam_i - (WINDOW_HEIGHT / 2) + 250
+    window.test(20)
+    view.player_sprite.center_y -= 1000
+    window.test(1)
+    player_y = view.player_sprite.center_y
+    cam_f = view.camera.position[1]
+    assert cam_f == cam_i - abs(player_y - down_edge)
+
 
 def test_left_right_keys(window: arcade.Window) -> None:
     view = GameView()
