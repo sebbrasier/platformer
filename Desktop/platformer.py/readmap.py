@@ -36,7 +36,7 @@ def load_map_config(filepath: str) -> Dict[str, Any]:
     content = split_map_file(filepath)[0]
     config = yaml.safe_load(content)
     if not isinstance(config, dict):
-        raise TypeError("Le fichier YAML doit contenir un dictionnaire racine.")
+        raise TypeError("Le fichier YAML doit contenir un dictionnaire racine")
     if 'width' not in config or 'height' not in config:
         raise KeyError("La config YAML doit contenir 'width' et 'height'.")
     return config
@@ -61,8 +61,7 @@ def init_gate_states_from_config(
             gate.open(wall_list)
         elif state == 'closed':
             gate.close(wall_list)
-        else:
-            raise ValueError(f"État portail inconnu: {state}")
+
 
 
 def link_inter_to_gates(
@@ -84,7 +83,7 @@ def link_inter_to_gates(
         )
         if inter_opt is None:
             raise ValueError(f"Aucun interrupteur à la position ({sx},{sy})")
-        inter: Inter = inter_opt  # narrow type for MyPy
+        inter: Inter = inter_opt  
 
         # Réinitialiser état et listes d’actions
         raw = sw.get("state", False)
