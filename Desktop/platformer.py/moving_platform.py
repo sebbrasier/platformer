@@ -9,106 +9,133 @@ from collections.abc import Callable
 Block_size_x : Final[int] = 64
 Block_size_y : Final[int] = 64
 
-platforms : frozenset[map_symbols] = frozenset({map_symbols.Half_grass, map_symbols.Grass_tile, map_symbols.Box})
+platforms  = frozenset({map_symbols.Half_grass, map_symbols.Grass_tile, map_symbols.Box, map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter})
 
-#Function that returns a set of all the points in a platforms
-def read_platform(map : Map, point : tuple[int, int], Rearrange : Callable[[tuple[int, int], Map], tuple[int, int]], point_set : set[tuple[int, int]]) -> None:
-    i = point[0]
-    j = point[1]
-    matrix = map.setup
-    width = map.dim[0]
-    height = map.dim[1]
-    point_set.add(Rearrange(point, map))
-    if i-1 >= 0 and i+1 < height and j-1 >=0 and j+1 < width:
+#Class for linear algebra operation:
+class LinAlgebra(ABC):
+    #gives the mirror image of a vector
+    @staticmethod
+    def flip_vector(vec : tuple[int, int], map : Map) -> tuple[int, int]:
+        width = map.dim[0]
+        return (vec[0], width - (vec[1]+1))
+
+    @staticmethod
+    #transpose vector : gives the transposed image of a vector
+    def transpose_vec(vec : tuple[int, int], map : Map) -> tuple[int, int]:
+        return (vec[1], vec[0])
+    @staticmethod
+    #transposes and flips:
+    def flip_transpose_vec(vec : tuple[int, int], map: Map) -> tuple[int, int]:
+        return(LinAlgebra.transpose_vec(LinAlgebra.flip_vector(vec, map), map))
+
+    @staticmethod
+    #mirror flips a matrix 
+    def flip_matrix(map : Map) -> Map:
+        width = map.dim[0]
+
+        new_matrix = [[map.setup[i][width - (j+1)] for j in range(len(map.setup[i]))] for i in range(len(map.setup))]
+        return Map(map.dim, new_matrix)
+
+    @staticmethod
+    #Transposes a matrix
+    def transpose_matrix(map : Map) -> Map:
+        new_matrix= [[map.setup[j][i] for j in range(map.dim[1])] for i in range(map.dim[0])]
+
+        return Map((map.dim[1], map.dim[0]), new_matrix)
+
+
+#Abstract class to read and add platforms
+class AddPlatform(ABC):
+
+    #Function that returns a set of all the points in a platforms
+    @staticmethod
+    def read_platform( map : Map, point : tuple[int, int], Rearrange : Callable[[tuple[int, int], Map], tuple[int, int]], point_set : set[tuple[int, int]]) -> None:
+        i = point[0]
+        j = point[1]
+        matrix = map.setup
+        width = map.dim[0]
+        height = map.dim[1]
+        point_set.add(Rearrange(point, map))
         #Recursive function that detects if all nieghboring blocks are part of the block and adds them to the platform set if they are
-        if Rearrange((i+1, j), map) not in point_set and matrix[i+1][j] in platforms:
-            point_set.add(Rearrange((i+1, j), map))
-            read_platform(map, (i+1, j), Rearrange, point_set)
-        if Rearrange((i-1, j), map) not in point_set and matrix[i-1][j] in platforms:
-            point_set.add(Rearrange((i-1, j), map))
-            read_platform(map, (i-1, j), Rearrange, point_set)
-        if Rearrange((i, j+1),map) not in point_set and matrix[i][j+1] in platforms:
-            point_set.add(Rearrange((i, j+1), map))
-            read_platform(map, (i, j+1), Rearrange, point_set)
-        if Rearrange((i, j-1),map) not in point_set and matrix[i][j-1] in platforms:
-            point_set.add(Rearrange((i, j-1), map))
-            read_platform(map, (i, j-1), Rearrange, point_set)
-
-
-#Write a function that returns the sequences of arrows in the map, along with the position of the grass block they are left to
-#for this function to detect any type of arrow chain, we will need to transpose and/or flip the maps
-def read_arrows_right(map: Map, symbol : map_symbols, Rearrange : Callable[[tuple[int, int], Map], tuple[int,int]]) -> dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]]:
-    table = map.setup
-    width = map.dim[0]
-    stockage: dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]] = {}
-
-    for i in range(len(table)):
-        j = 0
-        #detects if a chain of arrows is right to a block
-        while j+1 < len(table[i]):
-            if table[i][j+1] == symbol:
-                arrow_list: list[map_symbols] = [symbol]
-                h = j+1
-                while h + 1 < width and table[i][h + 1] == symbol:
-                    h += 1
-                    arrow_list.append(symbol)
-                point_set : set[tuple[int, int]] = set()
-                read_platform(map, (i, j), Rearrange, point_set)
-                frozen_point = frozenset(point_set)
-                stockage[frozen_point] = tuple(arrow_list)
-                j = h + 1  
-            else:
-                j += 1  
-    return stockage
-
-#gives the mirror image of a vector
-def flip_vector(vec : tuple[int, int], map : Map) -> tuple[int, int]:
-    width = map.dim[0]
-    return (vec[0], width - (vec[1]+1))
-
-#transpose vector : gives the transposed image of a vector
-def transpose_vec(vec : tuple[int, int], map : Map) -> tuple[int, int]:
-    return (vec[1], vec[0])
-
-#transposes and flips:
-def flip_transpose_vec(vec : tuple[int, int], map: Map) -> tuple[int, int]:
-    return(transpose_vec(flip_vector(vec, map), map))
-
-#Function that combines two platforms into one if both a left and right sequence of arrows touch the platforms
-def combine_right_left(left : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], 
-                       right : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], map: Map
-                       ) -> dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]]:
-    
-    left_set = {a for a in left}
-    right_set = {a for a in right}
-    final : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]] = {}
-    empty : tuple[map_symbols, ...] = ()
-    for a in left_set:
-        for b in right_set:
-            if a == b:
-                final[b] = (left[a], right[b])
-    
-    for a in left_set:
-        if a not in final:
-            final[a] = (left[a], empty)
+        if i+1 < height: 
+            if Rearrange((i+1, j), map) not in point_set and matrix[i+1][j] in platforms:
+                AddPlatform.read_platform(map, (i+1, j), Rearrange, point_set)
+        
+        if i-1 >= 0:
+            if Rearrange((i-1, j), map) not in point_set and matrix[i-1][j] in platforms:
+               AddPlatform.read_platform(map, (i-1, j), Rearrange, point_set)
             
-    for b in right_set:
-        if b not in final:
-            final[b] = (empty, right[b])
-    return final
+        if j+1 < width:
+            if Rearrange((i, j+1),map) not in point_set and matrix[i][j+1] in platforms:
+                AddPlatform.read_platform(map, (i, j+1), Rearrange, point_set)
+            
+        if j-1 >= 0:
+            if Rearrange((i, j-1),map) not in point_set and matrix[i][j-1] in platforms:
+                AddPlatform.read_platform(map, (i, j-1), Rearrange, point_set)
 
-#mirror flips a matrix 
-def flip_matrix(map : Map) -> Map:
-    width = map.dim[0]
+    #Write a function that returns the sequences of arrows in the map, along with the position of the grass block they are left to
+    #for this function to detect any type of arrow chain, we will need to transpose and/or flip the maps
+    @staticmethod
+    def read_arrows_right( map: Map, symbol : map_symbols, Rearrange : Callable[[tuple[int, int], Map], tuple[int,int]]) -> dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]]:
+        table = map.setup
+        width = map.dim[0]
+        stockage: dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]] = {}
 
-    new_matrix = [[map.setup[i][width - (j+1)] for j in range(len(map.setup[i]))] for i in range(len(map.setup))]
-    return Map(map.dim, new_matrix)
+        for i in range(len(table)):
+            j = 0
+            #detects if a chain of arrows is right to a block
+            while j+1 < len(table[i]):
+                if table[i][j+1] == symbol:
+                    arrow_list: list[map_symbols] = [symbol]
+                    h = j+1
+                    while h + 1 < width and table[i][h + 1] == symbol:
+                        h += 1
+                        arrow_list.append(symbol)
+                    point_set : set[tuple[int, int]] = set()
+                    AddPlatform.read_platform(map, (i, j), Rearrange, point_set)
+                    frozen_point = frozenset(point_set)
+                    #Value error if multiple arrow chains of the same direction affect the platform
+                    if frozen_point in stockage:
+                        raise ValueError("Erreur : une platforme est affectée par plusieurs séries de flèches qui vont dans le même sens")
+                    stockage[frozen_point] = tuple(arrow_list)
+                    j = h + 1  
+                else:
+                    j += 1  
+        return stockage
+    
+    #Function that combines two platforms into one if both a left and right sequence of arrows touch the platforms
+    #this makes sure a platform can only be affected by two sets of arrows in opposite direction
+    @staticmethod
+    def combine_right_left(left : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], 
+                        right : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], map: Map
+                        ) -> dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]]:
+        
+        left_set = {a for a in left}
+        right_set = {a for a in right}
+        final : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]] = {}
+        empty : tuple[map_symbols, ...] = ()
+        for a in left_set:
+            for b in right_set:
+                if a == b:
+                    final[b] = (left[a], right[b])
+        
+        for a in left_set:
+            if a not in final:
+                final[a] = (left[a], empty)
+                
+        for b in right_set:
+            if b not in final:
+                final[b] = (empty, right[b])
+        return final
 
-#Transposes a matrix
-def transpose_matrix(map : Map) -> Map:
-    new_matrix= [[map.setup[j][i] for j in range(map.dim[1])] for i in range(map.dim[0])]
+    #Function that raises a value error if both vertical and horizontal arrows affect the same platform
+    @staticmethod
+    def duplicate_checker(horizontal : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]],
+                        vertical : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]]) -> None:
+        for e in horizontal:
+            if e in vertical:
+                raise ValueError("Erreur : Une platforme est affectée par un mouvement horizontal et vertical")
 
-    return Map((map.dim[1], map.dim[0]), new_matrix)
 
 #Class for moving platforms
 class moving_platform:
