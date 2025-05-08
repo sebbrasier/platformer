@@ -82,7 +82,7 @@ def link_inter_to_gates(
             None
         )
         if inter_opt is None:
-            raise ValueError(f"Aucun interrupteur à la position ({sx},{sy})")
+            raise ValueError(f"Aucun interrupteur à la position ({sx},{sy}).")
         inter: Inter = inter_opt  
 
         # Réinitialiser état et listes d’actions
@@ -103,7 +103,7 @@ def link_inter_to_gates(
             else:
                 ax, ay = int(ac["x"]), int(ac["y"])
                 if (ax, ay) not in gate_dict:
-                    raise ValueError(f"Aucun portail trouvé à ({ax},{ay})")
+                    raise ValueError(f"Aucun portail trouvé à ({ax},{ay}).")
                 gate_ref: Gate = gate_dict[(ax, ay)]
 
                 if action == "open-gate":
