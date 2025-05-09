@@ -4,6 +4,7 @@ from typing import Final
 from abc import ABC, abstractmethod
 import random
 
+
 #Variables globales
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
