@@ -10,6 +10,7 @@ Block_size_x : Final[int] = 64
 Block_size_y : Final[int] = 64
 
 platforms  = frozenset({map_symbols.Half_grass, map_symbols.Grass_tile, map_symbols.Box, map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter})
+special_plat = frozenset({map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter})
 
 #Class for linear algebra operation:
 class LinAlgebra(ABC):
@@ -49,6 +50,7 @@ class AddPlatform(ABC):
 
     #Function that returns a set of all the points in a platforms
     @staticmethod
+    #Function that detects a "block" or entire platform and adds them all to the same set
     def read_platform( map : Map, point : tuple[int, int], Rearrange : Callable[[tuple[int, int], Map], tuple[int, int]], point_set : set[tuple[int, int]]) -> None:
         i = point[0]
         j = point[1]
@@ -56,7 +58,8 @@ class AddPlatform(ABC):
         width = map.dim[0]
         height = map.dim[1]
         point_set.add(Rearrange(point, map))
-        #Recursive function that detects if all nieghboring blocks are part of the block and adds them to the platform set if they are
+        #Recursive function that detects if all nieghboring blocks are part of the block and adds them to the platform set
+        #This function stops based on the conditions on i and j
         if i+1 < height: 
             if Rearrange((i+1, j), map) not in point_set and matrix[i+1][j] in platforms:
                 AddPlatform.read_platform(map, (i+1, j), Rearrange, point_set)
@@ -85,7 +88,7 @@ class AddPlatform(ABC):
             j = 0
             #detects if a chain of arrows is right to a block
             while j+1 < len(table[i]):
-                if table[i][j+1] == symbol:
+                if table[i][j+1] == symbol and table[i][j] in platforms:
                     arrow_list: list[map_symbols] = [symbol]
                     h = j+1
                     while h + 1 < width and table[i][h + 1] == symbol:
@@ -98,7 +101,7 @@ class AddPlatform(ABC):
                     if frozen_point in stockage:
                         raise ValueError("Erreur : une platforme est affectée par plusieurs séries de flèches qui vont dans le même sens")
                     stockage[frozen_point] = tuple(arrow_list)
-                    j = h + 1  
+                    j = h 
                 else:
                     j += 1  
         return stockage
@@ -160,6 +163,10 @@ class moving_platform:
     @abstractmethod
     def calculate_boundary_left(self, block_size : int) -> float:
         ...
+    
+    @abstractmethod
+    def move(self) -> None:
+        ...
 
 #Class for platforms that move horizontally
 class moving_platform_x(moving_platform):
@@ -172,10 +179,16 @@ class moving_platform_x(moving_platform):
         self.boundary_left = self.calculate_boundary_left(Block_size_x)
 
     def calculate_boundary_right(self, block_size : int) -> float:
-        return (self.grid_x + block_size/2) + len(self.arrow_sequence1) * block_size
+        return (self.platform.right ) + len(self.arrow_sequence1) * block_size
     
     def calculate_boundary_left(self, block_size : int) -> float:
-        return (self.grid_x - block_size/2) - len(self.arrow_sequence2) * block_size
+        return (self.platform.left ) - len(self.arrow_sequence2) * block_size
+    
+    def move(self) -> None:
+        if self.platform.right >= self.boundary_right and self.platform.change_x > 0 :
+            self.platform.change_x *= -1
+        if self.platform.left <= self.boundary_left and self.platform.change_x < 0 :
+            self.platform.change_x *= -1
 
 #Class for platforms that move vertically
 class moving_platform_y(moving_platform):
@@ -191,8 +204,14 @@ class moving_platform_y(moving_platform):
         self.boundary_left = self.calculate_boundary_left(Block_size_x)
 
     def calculate_boundary_right(self, block_size : int) -> float:
-        return (self.grid_y + block_size/2) + len(self.arrow_sequence1) * block_size
+        return (self.platform.top) + len(self.arrow_sequence1) * block_size
     
     def calculate_boundary_left(self, block_size : int) -> float:
-        return (self.grid_y - block_size/2) - len(self.arrow_sequence2) * block_size
+        return (self.platform.bottom) - len(self.arrow_sequence2) * block_size
+    
+    def move(self) -> None:
+        if self.platform.top >= self.boundary_right and self.platform.change_y > 0 :
+            self.platform.change_y *= -1
+        if self.platform.bottom <= self.boundary_left and self.platform.change_y < 0 :
+            self.platform.change_y *= -1
     

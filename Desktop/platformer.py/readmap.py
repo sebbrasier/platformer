@@ -266,7 +266,6 @@ def str_to_matrix(file : str, width : int) -> list[list[str]]:
     return tableau[1:-1]
 
 
-
 #Ouverture et lecture du fichier "map" pour ensuite la placer dans une matrice
 def lecture_map(fichier : str) -> list[list[map_symbols]]:
 
