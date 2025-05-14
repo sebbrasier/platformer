@@ -108,13 +108,8 @@ def test_boundary_x(window: arcade.Window) -> None:
     view = GameView()
     view.setup(file)
     window.show_view(view)
-    block = view.platform_class_list[0]
     sprite = view.platform_list[0]
-    #On s'assure que les frontières du sprite sont bien celles calculées
-    assert sprite.boundary_right == block.boundary_right
-    assert sprite.boundary_left == block.boundary_left
     window.test(20)
-
     #On s'assure que les calculs sont bons
     right = 224
     left = -32
@@ -128,12 +123,8 @@ def test_boundary_y(window: arcade.Window) -> None:
     view = GameView()
     view.setup(file)
     window.show_view(view)
-    block = view.platform_class_list[0]
     sprite = view.platform_list[0]
     #On s'assure que les frontières du sprite sont bien celles calculées
-    assert sprite.boundary_top == block.boundary_right
-    assert sprite.boundary_bottom == block.boundary_left
-    window.test(20)
 
     #On s'assure que les calculs sont bons
     up = 288
@@ -141,3 +132,42 @@ def test_boundary_y(window: arcade.Window) -> None:
     assert sprite.boundary_top == up
     assert sprite.boundary_bottom == down
     window.test(40)
+
+def test_special_plat(window : arcade.Window) -> None:
+    file = "maps/map_tests/moving_platforms/block10.txt"
+    view = GameView()
+    view.setup(file)
+    window.show_view(view)
+
+    #On s'assure que chacune des platformes spéciales est mise dans la boonne liste
+    assert len(view.no_go_list) == 1
+    assert len(view.inter_list) == 1
+    assert len(view.next_level_list) == 1
+
+    lava = view.no_go_list[0]
+    inter = view.inter_list[0]
+    pannel = view.next_level_list[0]
+
+    #On s'assure que le bon nombre de platformes est ajouté
+    assert len(view.platform_list) == 5
+
+    #test des bordures
+    assert lava.boundary_right == 160  #valeurs théoriques calculées manuellement
+    assert pannel.boundary_right == 224
+    assert inter.boundary_right == 284.5
+    assert lava.boundary_left == -32
+    assert pannel.boundary_left == 32
+    assert inter.boundary_left == 97.5
+
+    window.test(10)
+    #Test du mouvement
+    #Test que les platformes se déplacent vers la droite
+    assert lava.change_x == 1
+    assert inter.change_x == 1
+    assert pannel.change_x == 1
+
+    window.test(100)
+    #Test que les platformes se déplacent vers la gauche
+    assert lava.change_x == -1
+    assert inter.change_x == -1
+    assert pannel.change_x == -1

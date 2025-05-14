@@ -154,8 +154,7 @@ class GameView(arcade.View):
         #On rajoute tout d'abord toutes les platformes
         self.add_platform_x(horizontal, MAP)
         self.add_platform_y(vertical, MAP)
-        print(vertical)
-        print(horizontal)
+
         #Création de la map
         #On place les sprites au bon endroit
         for i in  range(len(MAP.setup)):
@@ -229,8 +228,6 @@ class GameView(arcade.View):
                         center_x = j * Grid_size,
                         scale = 0.5
                     )
-                    print(asset.center_x)
-                    print(asset.center_y)
                     
                     asset_class = moving_platform_x(asset, 1, sequence[1], sequence[0])
                     asset_class.platform.boundary_right = asset_class.boundary_right
@@ -246,6 +243,7 @@ class GameView(arcade.View):
                         self.platform_list.append(asset_class.platform)
                 
     #Fonction qui rajoute les platformes horizontales
+    #Un peu de duplication de code quand il s'agit de créer le sprite
     def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
         for a in platforms:
             sequence = platforms[a]
