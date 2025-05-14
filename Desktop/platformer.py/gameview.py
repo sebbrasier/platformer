@@ -1,7 +1,7 @@
 import arcade
 from readmap import *
 import math
-from typing import Final
+from typing import Final, Tuple
 from abc import ABC, abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
@@ -16,8 +16,8 @@ WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 #Taille d'un "carreau" de la grille définie dans readmap
 Grid_size = 64
-#Initialisation du son
-hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
+#Initialisation du son 
+
 
 
 #Classe pour voir quelle arme est active:
@@ -105,9 +105,10 @@ class GameView(arcade.View):
         self.jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
         self.game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
+        self.error_sound = arcade.load_sound(":resources:/sounds/error5.wav")
 
         #Initialisation des listes de fichiers
-        self.file_list = Map_list([ "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
+        self.file_list = Map_list(["maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
 
         # Setup our game
         self.setup(self.file_list.Maps[self.file_list.index])
@@ -115,6 +116,14 @@ class GameView(arcade.View):
     def setup(self, MAP_file : str) -> None:
     
         config  = load_map_config(MAP_file)
+        self.weapon_disable_zones: list[Tuple[int,int,int,int]] = []
+        for z in config.get("weapon_disable_zones", []):
+            self.weapon_disable_zones.append((
+                int(z["x1"]),
+                int(z["y1"]),
+                int(z["x2"]),
+                int(z["y2"]),
+            ))
 
         """Set up the game here."""
         PLAYER_GRAVITY = 1
@@ -154,12 +163,13 @@ class GameView(arcade.View):
         #On rajoute tout d'abord toutes les platformes
         self.add_platform_x(horizontal, MAP)
         self.add_platform_y(vertical, MAP)
+        print(vertical)
+        print(horizontal)
         #Création de la map
         #On place les sprites au bon endroit
         for i in  range(len(MAP.setup)):
             for j in range(len(MAP.setup[i])):
                 if (i, j) not in platform_set:
-                    #self.sprite_type(enum_to_sprite(sprite)[0], asset)
                     sprite = MAP.setup[i][j] 
                     if enum_to_sprite(sprite) != (" ", " "):
                         #Créer un sprite par rapport au (i, j)ième élément de la map
@@ -205,9 +215,12 @@ class GameView(arcade.View):
         #Initialisation de l'icone des armes
         self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
         self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
+        self.no_weapon_repr = arcade.Sprite("assets/kenney_board-game-icons/PNG/hand_cross.png", scale = 0.5, center_x=60, center_y = 450)
 
         self.weapon_icon_list.append(self.sword_repr)
         self.weapon_icon_list.append(self.bow_repr)
+        self.weapon_icon_list.append(self.no_weapon_repr)
+
         for icon in self.weapon_icon_list:
             icon.visible = False
         self.weapon_icon_list[self.active_weapon.index].visible = True
@@ -220,6 +233,7 @@ class GameView(arcade.View):
                 i = vec[0]
                 j = vec[1]
                 sprite = MAP.setup[i][j] 
+        
                 if enum_to_sprite(sprite) != (" ", " "):
                     #Créer un sprite par rapport au (i, j)ième élément de la map
                     asset = arcade.Sprite(enum_to_sprite(sprite)[1],
@@ -227,14 +241,22 @@ class GameView(arcade.View):
                         center_x = j * Grid_size,
                         scale = 0.5
                     )
+                    print(asset.center_x)
+                    print(asset.center_y)
+                    
                     asset_class = moving_platform_x(asset, 1, sequence[1], sequence[0])
                     asset_class.platform.boundary_right = asset_class.boundary_right
                     asset_class.platform.boundary_left = asset_class.boundary_left
                     asset_class.platform.change_x = asset_class.speed
-                    self.platform_list.append(asset_class.platform)
-                    self.platform_class_list.append(asset_class)
-                    
-    
+                    #selon le type de sprite, il est ajouté ou non dans la liste de platformes
+                    if sprite in special_plat:
+                        map_x = j
+                        map_y = len(MAP) - 1 - i
+                        self.sprite_type(enum_to_sprite(sprite)[0], asset, map_x, map_y)
+                        self.platform_class_list.append(asset_class)
+                    else:
+                        self.platform_list.append(asset_class.platform)
+                
     #Fonction qui rajoute les platformes horizontales
     def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
         for a in platforms:
@@ -254,8 +276,14 @@ class GameView(arcade.View):
                     asset_class.platform.boundary_top = asset_class.boundary_right
                     asset_class.platform.boundary_bottom = asset_class.boundary_left
                     asset_class.platform.change_y = asset_class.speed
-                    self.platform_list.append(asset_class.platform)
-                    self.platform_class_list.append(asset_class)
+                    #selon le type de sprite, il est ajouté ou non dans la liste de platformes
+                    if sprite in special_plat:
+                        map_x = j
+                        map_y = len(MAP) - 1 - i
+                        self.sprite_type(enum_to_sprite(sprite)[0], asset, map_x, map_y)
+                        self.platform_class_list.append(asset_class)
+                    else:
+                        self.platform_list.append(asset_class.platform)
     
     #Fonction qui détecte si le joueur collisionne avec le paneau
     def check_for_next_level(self) -> None:
@@ -310,6 +338,16 @@ class GameView(arcade.View):
     #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if button == arcade.MOUSE_BUTTON_LEFT:
+            #calcul de la zone de non arme
+            position_x = int(self.player_sprite.center_x // Grid_size)
+            position_y = int(self.player_sprite.center_y // Grid_size)
+            for x1, y1, x2, y2 in self.weapon_disable_zones:
+                if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                    arcade.play_sound(self.error_sound)
+                    self.no_weapon_repr.color = arcade.color.RED
+                    self.no_weapon_repr.visible = True
+                    # on est dans une zone où l'arme est désactivée
+                    return
             #Fait appraitre l'arme que l'on a sélectionné, indiqué par active_weapon.index
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
@@ -342,6 +380,8 @@ class GameView(arcade.View):
             weapon = self.active_weapon.weapons[self.active_weapon.index]
             weapon.attribute.visible = False
             self.Allow_change_weapon = True
+            self.no_weapon_repr.visible = False
+            self.no_weapon_repr.color = arcade.color.WHITE
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
@@ -436,10 +476,12 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float) -> None:
         self.physics_engine.update()
         self.monster_list.update()
+        self.no_go_list.update()
+        self.inter_list.update()
+        self.next_level_list.update()
 
         self.check_for_next_level()
         self.cam_control()
-
 
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
@@ -448,11 +490,31 @@ class GameView(arcade.View):
         #son
             arcade.play_sound(self.coin_sound)
 
+        # savoir si on rentre dans la no_weapon zone
+        position_x = int(self.player_sprite.center_x // Grid_size)
+        position_y = int(self.player_sprite.center_y // Grid_size)
+
+        # 2) Vérifier si on est dans l'une des zones
+        self.no_weapon_repr.visible = False
+        for x1, y1, x2, y2 in self.weapon_disable_zones:
+            if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                self.no_weapon_repr.visible = True
+                
+                
+
+
+        
+
+
         #update position de l'arme sur l'écran
         weapon = self.active_weapon.weapons[self.active_weapon.index]
         weapon.camera_position = self.camera.position
         weapon.player_sprite = self.player_sprite
         weapon.update_weapon_position()
+
+        #Update la position des platformes non-controlées par arcade
+        for e in self.platform_class_list:
+            e.move()
         
         #check si l'épée touche un monstre
         weapon.check_hit_monsters(self.monster_list)
@@ -464,7 +526,6 @@ class GameView(arcade.View):
 
        
         #check si on touche un interupteur
-        
         for inter in self.inter_class_list:
             if weapon.check_hit_inter(inter.sprite) == True and self.active_weapon.index == 0:
                 inter.trigger()
