@@ -1,7 +1,7 @@
 import arcade
 from readmap import *
 import math
-from typing import Final
+from typing import Final, Tuple
 from abc import ABC, abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
@@ -17,7 +17,7 @@ WINDOW_HEIGHT = 720
 #Taille d'un "carreau" de la grille définie dans readmap
 Grid_size = 64
 #Initialisation du son 
-hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
+
 
 
 #Classe pour voir quelle arme est active:
@@ -105,6 +105,7 @@ class GameView(arcade.View):
         self.jump_sound = arcade.load_sound(":resources:/sounds/jump3.wav")
         self.game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
+        self.error_sound = arcade.load_sound(":resources:/sounds/error5.wav")
 
         #Initialisation des listes de fichiers
         self.file_list = Map_list(["maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
@@ -115,6 +116,14 @@ class GameView(arcade.View):
     def setup(self, MAP_file : str) -> None:
     
         config  = load_map_config(MAP_file)
+        self.weapon_disable_zones: list[Tuple[int,int,int,int]] = []
+        for z in config.get("weapon_disable_zones", []):
+            self.weapon_disable_zones.append((
+                int(z["x1"]),
+                int(z["y1"]),
+                int(z["x2"]),
+                int(z["y2"]),
+            ))
 
         """Set up the game here."""
         PLAYER_GRAVITY = 1
@@ -205,9 +214,12 @@ class GameView(arcade.View):
         #Initialisation de l'icone des armes
         self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
         self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
+        self.no_weapon_repr = arcade.Sprite("assets/kenney_board-game-icons/PNG/hand_cross.png", scale = 0.5, center_x=60, center_y = 450)
 
         self.weapon_icon_list.append(self.sword_repr)
         self.weapon_icon_list.append(self.bow_repr)
+        self.weapon_icon_list.append(self.no_weapon_repr)
+
         for icon in self.weapon_icon_list:
             icon.visible = False
         self.weapon_icon_list[self.active_weapon.index].visible = True
@@ -324,6 +336,16 @@ class GameView(arcade.View):
     #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if button == arcade.MOUSE_BUTTON_LEFT:
+            #calcul de la zone de non arme
+            position_x = int(self.player_sprite.center_x // Grid_size)
+            position_y = int(self.player_sprite.center_y // Grid_size)
+            for x1, y1, x2, y2 in self.weapon_disable_zones:
+                if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                    arcade.play_sound(self.error_sound)
+                    self.no_weapon_repr.color = arcade.color.RED
+                    self.no_weapon_repr.visible = True
+                    # on est dans une zone où l'arme est désactivée
+                    return
             #Fait appraitre l'arme que l'on a sélectionné, indiqué par active_weapon.index
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
@@ -356,6 +378,8 @@ class GameView(arcade.View):
             weapon = self.active_weapon.weapons[self.active_weapon.index]
             weapon.attribute.visible = False
             self.Allow_change_weapon = True
+            self.no_weapon_repr.visible = False
+            self.no_weapon_repr.color = arcade.color.WHITE
         
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when the user presses a key on the keyboard."""
@@ -463,6 +487,22 @@ class GameView(arcade.View):
             self.coin_score.points += 1
         #son
             arcade.play_sound(self.coin_sound)
+
+        # savoir si on rentre dans la no_weapon zone
+        position_x = int(self.player_sprite.center_x // Grid_size)
+        position_y = int(self.player_sprite.center_y // Grid_size)
+
+        # 2) Vérifier si on est dans l'une des zones
+        self.no_weapon_repr.visible = False
+        for x1, y1, x2, y2 in self.weapon_disable_zones:
+            if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                self.no_weapon_repr.visible = True
+                
+                
+
+
+        
+
 
         #update position de l'arme sur l'écran
         weapon = self.active_weapon.weapons[self.active_weapon.index]

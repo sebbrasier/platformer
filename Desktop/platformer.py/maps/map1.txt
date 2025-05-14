@@ -1,5 +1,10 @@
 width: 24
 height: 8
+weapon_disable_zones:
+  - x1: 7
+    y1: 1
+    x2: 17
+    y2: 8
 switches:
   - x: 0
     y: 7
@@ -32,8 +37,8 @@ gates:
 ---
 ^     x           x
 --    x ^         x
-      x-----      |
- ↑ ---x           =
+      x-----vvvv  |
+ ↑ ---x     o     =
  ↑    x   -----   =
 ---   x   x   |  x=
  S    |  xx * x  x=  E
