@@ -124,6 +124,14 @@ class GameView(arcade.View):
                 int(z["x2"]),
                 int(z["y2"]),
             ))
+        self.gravity_inverse: list[Tuple[int,int,int,int]] = []
+        for z in config.get("gravity_inverse_zones", []):
+            self.gravity_inverse.append((
+                int(z["x1"]),
+                int(z["y1"]),
+                int(z["x2"]),
+                int(z["y2"]),
+            ))
 
         """Set up the game here."""
         PLAYER_GRAVITY = 1
@@ -216,10 +224,12 @@ class GameView(arcade.View):
         self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
         self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
         self.no_weapon_repr = arcade.Sprite("assets/kenney_board-game-icons/PNG/hand_cross.png", scale = 0.5, center_x=60, center_y = 450)
+        self.gravity_change = arcade.Sprite("assets/kenney_board-game-icons/PNG/character_lift.png", scale = 0.5, center_x=60, center_y = 350)
 
         self.weapon_icon_list.append(self.sword_repr)
         self.weapon_icon_list.append(self.bow_repr)
         self.weapon_icon_list.append(self.no_weapon_repr)
+        self.weapon_icon_list.append(self.gravity_change)
 
         for icon in self.weapon_icon_list:
             icon.visible = False
@@ -335,7 +345,17 @@ class GameView(arcade.View):
         self.arrow_list.append(arrow)
         return arrow
     
-    #Définit tout ce qui se passe quand le joueur appuye sur le ckick gauche
+    def can_jump_homemade(self,gravity_index : int, y_distance: float = 5.0) -> bool:
+        offset = - y_distance * gravity_index
+        self.player_sprite.center_y += offset
+
+        hits = arcade.check_for_collision_with_list(self.player_sprite,self.wall_list)
+        hits += arcade.check_for_collision_with_list(self.player_sprite,self.platform_list)
+        self.player_sprite.center_y -= offset
+
+        return len(hits) > 0
+    
+    #Définit tout ce qui se passe quand le joueur appuye sur le click gauche
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
         if button == arcade.MOUSE_BUTTON_LEFT:
             #calcul de la zone de non arme
@@ -398,9 +418,19 @@ class GameView(arcade.View):
             self.player_sprite.change_x = - PLAYER_MOVEMENT_SPEED
             self.key_left = True
 
-        if key == arcade.key.UP and self.physics_engine.can_jump(): 
+
+            
+        gravity_constant : int = 1
+        position_x = int(self.player_sprite.center_x // Grid_size)
+        position_y = int(self.player_sprite.center_y // Grid_size)
+        for x1, y1, x2, y2 in self.gravity_inverse:
+            if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                gravity_constant = -1
+                break
+        if key == arcade.key.UP and self.can_jump_homemade(gravity_constant): 
+
             # start moving to the left
-            self.player_sprite.change_y = PLAYER_JUMP_SPEED
+            self.player_sprite.change_y = PLAYER_JUMP_SPEED * gravity_constant 
 
             #son
             arcade.play_sound(self.jump_sound)
@@ -490,22 +520,27 @@ class GameView(arcade.View):
         #son
             arcade.play_sound(self.coin_sound)
 
-        # savoir si on rentre dans la no_weapon zone
+                # savoir si on rentre dans la no_weapon zone
         position_x = int(self.player_sprite.center_x // Grid_size)
         position_y = int(self.player_sprite.center_y // Grid_size)
 
         # 2) Vérifier si on est dans l'une des zones
+        self.physics_engine.gravity_constant = 1
+        self.player_sprite.angle = 0
         self.no_weapon_repr.visible = False
+        self.gravity_change.visible = False
         for x1, y1, x2, y2 in self.weapon_disable_zones:
             if x1 <= position_x <= x2 and y1 <= position_y <= y2:
                 self.no_weapon_repr.visible = True
+        for x1, y1, x2, y2 in self.gravity_inverse:
+            if x1 <= position_x <= x2 and y1 <= position_y <= y2:
+                self.physics_engine.gravity_constant = - self.physics_engine.gravity_constant
+                self.player_sprite.angle = 180
+                self.gravity_change.visible = True
+                break
+               
                 
                 
-
-
-        
-
-
         #update position de l'arme sur l'écran
         weapon = self.active_weapon.weapons[self.active_weapon.index]
         weapon.camera_position = self.camera.position
@@ -550,6 +585,7 @@ class GameView(arcade.View):
         self.game_over(self.monster_list)
         # reintialise le can_kill a False pour que l'épée puisse faire des actions seulement pendant l'image du clic
         Sword.can_kill = False
+
 
 
 

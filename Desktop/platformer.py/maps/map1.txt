@@ -1,46 +1,51 @@
-width: 24
+width: 28
 height: 8
-weapon_disable_zones:
-  - x1: 7
+gravity_inverse_zones:
+  - x1: -1
     y1: 1
-    x2: 17
+    x2: 1
+    y2: 8
+weapon_disable_zones:
+  - x1: 11
+    y1: 1
+    x2: 21
     y2: 8
 switches:
-  - x: 0
+  - x: 4
     y: 7
     switch_on:
       - action: open-gate
-        x: 6
+        x: 10
         y: 1
       - action: disable
-  - x: 8
+  - x: 12
     y: 6 
     state: on
     switch_off:
       - action: open-gate
-        x: 14
+        x: 18
         y: 2
       - action: close-gate
-        x: 18
+        x: 22
         y: 5
     switch_on:
       - action: close-gate
-        x: 14
+        x: 18
         y: 2
       - action: open-gate
-        x: 18
+        x: 22
         y: 5
 gates:
-  - x: 18
+  - x: 22
     y: 5
     state: open
 ---
-^     x           x
---    x ^         x
-      x-----vvvv  |
- ↑ ---x     o     =
- ↑    x   -----   =
----   x   x   |  x=
- S    |  xx * x  x=  E
-========================
+    ^     x           x
+xxxx--    x ^         x
+x * x     x-----vvvv  |
+xvx  ↑ ---x     o     =
+x x  ↑    x   -----   =
+x x ---   x   x   |  x=
+x    S    |  xx * x  x=  E
+============================
 ---
