@@ -9,7 +9,7 @@ from collections.abc import Callable
 Block_size_x : Final[int] = 64
 Block_size_y : Final[int] = 64
 
-platforms  = frozenset({map_symbols.Half_grass, map_symbols.Grass_tile, map_symbols.Box, map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter})
+platforms  = frozenset({map_symbols.Half_grass, map_symbols.Grass_tile, map_symbols.Box, map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter, map_symbols.Break})
 special_plat = frozenset({map_symbols.Lava, map_symbols.Next_level, map_symbols.Inter})
 
 #Class for linear algebra operation:
@@ -76,7 +76,7 @@ class AddPlatform(ABC):
             if Rearrange((i, j-1),map) not in point_set and matrix[i][j-1] in platforms:
                 AddPlatform.read_platform(map, (i, j-1), Rearrange, point_set)
 
-    #Write a function that returns the sequences of arrows in the map, along with the position of the grass block they are left to
+    #Write a function that returns the sequences of arrows in the map, along with the position of the block they are left to
     #for this function to detect any type of arrow chain, we will need to transpose and/or flip the maps
     @staticmethod
     def read_arrows_right( map: Map, symbol : map_symbols, Rearrange : Callable[[tuple[int, int], Map], tuple[int,int]]) -> dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]]:
@@ -107,7 +107,7 @@ class AddPlatform(ABC):
         return stockage
     
     #Function that combines two platforms into one if both a left and right sequence of arrows touch the platforms
-    #this makes sure a platform can only be affected by two sets of arrows in opposite direction
+    #this makes sure a platform cannot be affected by both horizontal and vertical movement
     @staticmethod
     def combine_right_left(left : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], 
                         right : dict[frozenset[tuple[int, int]], tuple[map_symbols, ...]], map: Map
@@ -148,12 +148,22 @@ class moving_platform:
     arrow_sequence2 : Final[tuple[map_symbols, ...]]
     boundary_right : float
     boundary_left : float
+    is_dropped : bool 
+    ref_y: float
+    timer : float
+    start_timer : bool
+    can_go_up : bool
 
     def __init__(self, platform : arcade.Sprite, speed : float, arrow_sequence1 : tuple[map_symbols, ...], arrow_sequence2 : tuple[map_symbols, ...]) -> None:
         self.platform = platform
         self.arrow_sequence1 = arrow_sequence1
         self.arrow_sequence2 = arrow_sequence2
         self.speed = speed
+        self.is_dropped = False
+        self.ref_y = self.platform.center_y
+        self.timer = 0.0
+        self.start_timer = False
+        self.can_go_up = False
         
 
     @abstractmethod
@@ -167,6 +177,26 @@ class moving_platform:
     @abstractmethod
     def move(self) -> None:
         ...
+    #method for dropping platforms when the player is on them
+    @abstractmethod
+    def drop(self) -> None:
+        ...
+    
+    @abstractmethod
+    def go_up(self) -> None:
+        ...
+    
+    #Method that detects if a platform is under a player
+    def is_under(self, player : arcade.Sprite) -> bool:
+        #Create a point under the player
+        point_y = player.bottom - 12
+        point_x = player.center_x
+
+        if self.platform.left <= point_x and point_x <= self.platform.right and self.platform.bottom <= point_y and point_y <= self.platform.top:
+            return True
+        return False
+    
+    
 
 #Class for platforms that move horizontally
 class moving_platform_x(moving_platform):
@@ -185,10 +215,28 @@ class moving_platform_x(moving_platform):
         return (self.platform.left ) - len(self.arrow_sequence2) * block_size
     
     def move(self) -> None:
+        
         if self.platform.right >= self.boundary_right and self.platform.change_x > 0 :
             self.platform.change_x *= -1
         if self.platform.left <= self.boundary_left and self.platform.change_x < 0 :
             self.platform.change_x *= -1
+    
+    #method for dropping platforms when the player is on them
+    #We only define this for horizontal platforms
+    def drop(self) -> None:
+        if self.can_go_up is False:
+            if self.is_dropped is True:
+                self.platform.center_y -= 10
+            if self.platform.center_y <= -1200:
+                self.can_go_up = True
+                self.is_dropped = False
+    
+    def go_up(self) -> None:
+        if self.can_go_up is True:
+            self.platform.center_y += 10
+            if self.platform.center_y >= self.ref_y:
+                self.platform.center_y = self.ref_y
+                self.can_go_up = False
 
 #Class for platforms that move vertically
 class moving_platform_y(moving_platform):
@@ -210,8 +258,16 @@ class moving_platform_y(moving_platform):
         return (self.platform.bottom) - len(self.arrow_sequence2) * block_size
     
     def move(self) -> None:
+        
         if self.platform.top >= self.boundary_right and self.platform.change_y > 0 :
             self.platform.change_y *= -1
         if self.platform.bottom <= self.boundary_left and self.platform.change_y < 0 :
             self.platform.change_y *= -1
     
+    def drop(self) -> None:
+        pass
+    
+    def go_up(self) -> None:
+        pass
+
+        

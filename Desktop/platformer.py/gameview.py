@@ -68,7 +68,11 @@ class GameView(arcade.View):
     inter_class_list :list[Inter]
     gate_class_list : list[Gate]
 
-
+    #liste pour platformes qui se cassent
+    drop_platform_list : list[moving_platform]
+    drop_bool : bool 
+    timer_started : bool 
+    timer : float
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     monster_TABLE : monster_table
@@ -106,9 +110,11 @@ class GameView(arcade.View):
         self.game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
         self.error_sound = arcade.load_sound(":resources:/sounds/error5.wav")
+        self.timer_started = False
+        self.timer = 0.0
 
         #Initialisation des listes de fichiers
-        self.file_list = Map_list(["maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
+        self.file_list = Map_list(["maps/map0.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
 
         # Setup our game
         self.setup(self.file_list.Maps[self.file_list.index])
@@ -146,8 +152,7 @@ class GameView(arcade.View):
         self.inter_list = arcade.SpriteList()
         self.inter_class_list = []
         self.gate_class_list = []
-
-
+        self.drop_platform_list = []
         
         MAP = Map(dim(MAP_file), lecture_map(MAP_file))
         #Ajout des platformes qui bougent
@@ -253,9 +258,11 @@ class GameView(arcade.View):
                         self.platform_class_list.append(asset_class)
                     else:
                         self.platform_list.append(asset_class.platform)
+                    if sprite == map_symbols.Break:
+                        self.drop_platform_list.append(asset_class)
                 
     #Fonction qui rajoute les platformes horizontales
-    #Un peu de duplication de code quand il s'agit de créer le sprite
+    #Un peu de duplication de code quand il s'agit de créer le sprite, mais il n'y a pas moyen de rajouter les platformes verticales et horizontales en meme temps avec le code actuel
     def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
         for a in platforms:
             sequence = platforms[a]
@@ -282,6 +289,8 @@ class GameView(arcade.View):
                         self.platform_class_list.append(asset_class)
                     else:
                         self.platform_list.append(asset_class.platform)
+                    if sprite == map_symbols.Break:
+                        self.drop_platform_list.append(asset_class)
     
     #Fonction qui détecte si le joueur collisionne avec le paneau
     def check_for_next_level(self) -> None:
@@ -432,7 +441,6 @@ class GameView(arcade.View):
             self.gate_list.draw()
             self.inter_list.draw()
             self.monster_list.draw()
-
             
         with self.UI_camera.activate():
             arcade.draw_text(f"SCORE: {self.coin_score.points}", 10,650, arcade.color.WHITE, 20,font_name="Kenney Future")
@@ -497,12 +505,6 @@ class GameView(arcade.View):
         for x1, y1, x2, y2 in self.weapon_disable_zones:
             if x1 <= position_x <= x2 and y1 <= position_y <= y2:
                 self.no_weapon_repr.visible = True
-                
-                
-
-
-        
-
 
         #update position de l'arme sur l'écran
         weapon = self.active_weapon.weapons[self.active_weapon.index]
@@ -542,6 +544,20 @@ class GameView(arcade.View):
         for monster in self.monster_TABLE.monsters:
             monster.monster_position(self.no_go_list, self.wall_list)
 
+        #platformes qui se cassent
+        for e in self.drop_platform_list:
+            if e.is_under(self.player_sprite) is True:
+                e.start_timer = True
+            if e.start_timer:
+                e.timer += delta_time
+            if e.timer >= 0.5:
+                e.is_dropped = True
+                e.start_timer = False
+                e.timer = 0.0
+            if e.is_dropped is True:
+                e.drop()
+            e.go_up()          
+    
 
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)
