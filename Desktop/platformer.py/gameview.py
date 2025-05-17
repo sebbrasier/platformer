@@ -114,7 +114,7 @@ class GameView(arcade.View):
         self.timer = 0.0
 
         #Initialisation des listes de fichiers
-        self.file_list = Map_list(["maps/map0.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
+        self.file_list = Map_list(["maps/map4.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
 
         # Setup our game
         self.setup(self.file_list.Maps[self.file_list.index])
