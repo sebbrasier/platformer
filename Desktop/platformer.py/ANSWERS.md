@@ -51,4 +51,13 @@ Comment gérez-vous le fait que vous avez maintenant deux types de monstres, et 
 
 Pour gérer le fait que l'on a maintenant 2 types de monstres et 2 types d'armes nous avons donc créé des classes hérité avec comme classes parents une class monstre et une class arme pour ensuite pouvoir avoir des class enfants et y mettre nos différents monstres et armes. Nous avons aussi du créer 2 listes (blob_Table et chauve_souris_TABLE pour pouvoir anger les instances de ces monstres séparement)
 
+### semaine 9
+Quel algorithme utilisez-vous pour identifier tous les blocs d’une plateformes, et leurs limites de déplacement ?
+Pour identifier les blocs, on utilise un algorithme recursif: si on bloc est a proximité d'une série de flèches on vérifie si les 4 blocs autour (en haut, bas, à droit et à gauche) peuvent bien être rajoutés en tant que platforme puis les rajoutent dans un set si c'est le cas. L'entiéreté de la platforme sera maintenant un frozenset qui sera associé à la longuer de la chaine de flèches dans un dictionnaire. Le déplacement est ensuite facilement calculé grace à la longueur des chaines de flèches
+
+Sur quelle structure travaille cet algorithme ? Quels sont les avantages et inconvénients de votre choix ?
+L'algorithme travaille sur des matrices et utilise des frozensets et des dictionnaires
+Avantages : Cela permet de réellement séparer chaque étape du procéssus de recognisation et calcul des platformes, on travaille sur des matrices, frozensets et dictionnaires, ce qui simplifie grandement la tache et qui profite du hash (nottament recherche en teta(1)), 
+Désavantages : L'algorithme qui reconnait les platformes est assez couteux (même si raisonnable dans le cadre du projet), et on est obligés d'imbriquer beacoup de fonctions pour traiter tous les cas (platformes qui se déplacent en haut et en bas), ce qui n'améliore pas les performances.
+
 

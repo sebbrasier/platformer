@@ -179,6 +179,7 @@ class map_symbols(Enum):
     RIGHT = auto()
     UP = auto()
     DOWN = auto()
+    Break = auto()
 
 #Fonction qui convertit des char en enum
 def char_to_map(char : str) -> map_symbols:
@@ -212,6 +213,8 @@ def char_to_map(char : str) -> map_symbols:
         return map_symbols.UP
     if char == "^":
         return map_symbols.Inter
+    if char == "b":
+        return map_symbols.Break
     if char == "|":
         return map_symbols.Gate
     else:
@@ -245,6 +248,8 @@ def enum_to_sprite(char: map_symbols) -> tuple[str, str]:
         return ("inter", ":resources:/images/tiles/leverLeft.png")
     if char == map_symbols.Gate:
         return ("gate", ":resources:/images/tiles/stoneCenter_rounded.png")
+    if char == map_symbols.Break:
+        return ("Wall", ":resources:/images/tiles/bridgeA.png")
     else:
         print(char)
         raise ValueError("Erreur: caractere inconnu")
