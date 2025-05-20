@@ -2,7 +2,6 @@ import arcade
 from typing import Final
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Final
 from readmap import *
 from collections.abc import Callable
 

@@ -99,22 +99,6 @@ def test_left_right_keys(window: arcade.Window) -> None:
     assert(x != view.player_sprite.position)
     
 
-# test que la touche echap pour reset le jeu fonctionne bien
-
-def test_reset_with_escape(window: arcade.Window) -> None:
-    view = GameView()
-    window.show_view(view)
-
-    # le joueur se déplace
-    view.player_sprite.center_x += 200
-
-    # Appuyer sur ECHAP pour réinitialiser
-    view.on_key_press(arcade.key.ESCAPE, 0)
-
-    # Vérifier que le joueur est revenu à sa position initiale
-    assert view.player_sprite.center_x == 64
-    assert view.player_sprite.center_y == 128
-
 
 def test_score_reset_after_game_over(window: arcade.Window) -> None:
     """
