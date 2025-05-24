@@ -10,6 +10,7 @@ from All_items.gate import *
 from pyglet.math import Vec2
 from moving_platform import *
 import random
+import timeit
 
 #Variables globales
 WINDOW_WIDTH = 1280
@@ -147,7 +148,7 @@ class GameView(arcade.View):
         self.weapon_icon_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList(use_spatial_hash=True)
         self.no_go_list = arcade.SpriteList(use_spatial_hash=True)
-        self.monster_list = arcade.SpriteList(use_spatial_hash=True)
+        self.monster_list = arcade.SpriteList()
         self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
         self.player_sprite_list = arcade.SpriteList()
         self.arrow_list = arcade.SpriteList()
@@ -505,7 +506,12 @@ class GameView(arcade.View):
             self.file_list.index = 0
             self.setup(self.file_list.Maps[self.file_list.index])
             self.coin_score.erase
+            arcade.play_sound(self.game_over_sound)
         # son 
+        if self.player_sprite.center_y <= -300:
+            self.file_list.index = 0
+            self.setup(self.file_list.Maps[self.file_list.index])
+            self.coin_score.erase
             arcade.play_sound(self.game_over_sound)
             
     """Main in-game view."""
