@@ -77,7 +77,7 @@ def test_camera(window: arcade.Window) -> None:
     cam_i = view.camera.position[1]
     down_edge = cam_i - (WINDOW_HEIGHT / 2) + 250
     window.test(20)
-    view.player_sprite.center_y -= 1000
+    view.player_sprite.center_y -= 100
     window.test(1)
     player_y = view.player_sprite.center_y
     cam_f = view.camera.position[1]
@@ -99,10 +99,6 @@ def test_left_right_keys(window: arcade.Window) -> None:
     assert(x != view.player_sprite.position)
     
 
-<<<<<<< HEAD
-
-=======
->>>>>>> f3b1f9b336f89f6b394fc5283b6e28b9e3a6287c
 def test_score_reset_after_game_over(window: arcade.Window) -> None:
     """
     Test que le score se réinitialise après un game over.

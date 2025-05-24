@@ -9,11 +9,6 @@ from All_items.interuptor import *
 from All_items.gate import *
 from pyglet.math import Vec2
 from moving_platform import *
-<<<<<<< HEAD
-import random
-import timeit
-=======
->>>>>>> f3b1f9b336f89f6b394fc5283b6e28b9e3a6287c
 
 #Variables globales
 WINDOW_WIDTH = 1280
@@ -107,7 +102,7 @@ class GameView(arcade.View):
         self.error_sound = arcade.load_sound(":resources:/sounds/error5.wav")
 
         #Initialisation des listes de fichiers
-        self.file_list = Map_list([ "maps/map5.txt","maps/map4.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
+        self.file_list = Map_list([ "maps/map5.txt","maps/map4.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0) 
 
         # Setup our game
         self.setup(self.file_list.Maps[self.file_list.index])
@@ -301,7 +296,8 @@ class GameView(arcade.View):
     def check_for_next_level(self) -> None:
         exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
         for exit in exit_list:
-             self.file_list.index += 1
+             self.file_list.index = (1 + self.file_list.index) % len(self.file_list)
+             #reset maps once we hit the end
              self.setup(self.file_list.Maps[self.file_list.index])
     
     #Ranger les sprites dans la bonne liste selon son asset
@@ -334,7 +330,11 @@ class GameView(arcade.View):
             lever = Inter(sprite,False,map_x,map_y)
             self.inter_list.append(lever.sprite)        
             self.inter_class_list.append(lever)
-
+        if type == "Break":
+            empt : tuple[map_symbols, ...] = ()
+            asset_class = moving_platform_x(sprite, 0, empt,empt) 
+            self.drop_platform_list.append(asset_class)
+            self.wall_list.append(asset_class.platform)
 
         
     #Variables booléennes qui détectent quand les touches sont appuyées
