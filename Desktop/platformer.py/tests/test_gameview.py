@@ -99,7 +99,10 @@ def test_left_right_keys(window: arcade.Window) -> None:
     assert(x != view.player_sprite.position)
     
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> f3b1f9b336f89f6b394fc5283b6e28b9e3a6287c
 def test_score_reset_after_game_over(window: arcade.Window) -> None:
     """
     Test que le score se réinitialise après un game over.

@@ -1,5 +1,7 @@
 import arcade
 from All_items.interuptor import *
+
+# Class pour les portails
 class Gate :
     sprite: arcade.Sprite
     x :int
@@ -10,6 +12,7 @@ class Gate :
         self.x=x
         self.y =y
     
+    # fonction open et close qui sont appelées dans les Callable des actions des leviers corrsepondants
     def open(self, wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
         if self.sprite in wall_list:
             wall_list.remove(self.sprite)

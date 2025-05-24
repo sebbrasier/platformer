@@ -1,7 +1,6 @@
 import arcade
 import math
-from typing import Final
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import random
 
 
@@ -85,11 +84,12 @@ class chauve_souris(monster):
         self.vy = math.sin(angle) * speed
         self.random_dir = random_dir
 
-    #Fonction de déplacement des chauves-souris
+    #Fonction de déplacement des chauves-souris, avec la fonction random.gauss avec une moyenne à 0 et un écart type a pi/20
+    #pour que la chauve souris ait une grande probabilité de faire un petit changement de direction et une très petite de faire un 180°.
     def monster_position(self, no_go_list: arcade.SpriteList[arcade.Sprite], wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
         if random.random() < self.random_dir:
             current_angle = math.atan2(self.vy, self.vx)
-            delta_angle = random.gauss(60, math.pi / 60)
+            delta_angle = random.gauss(0, math.pi / 20)
             new_angle = current_angle + delta_angle
             self.vx = math.cos(new_angle) * self.speed
             self.vy = math.sin(new_angle) * self.speed
@@ -98,9 +98,9 @@ class chauve_souris(monster):
         new_x = self.sprite.center_x + self.vx
         new_y = self.sprite.center_y + self.vy
 
+        #'Rebondit' sur les limites de sa zone si elle les atteint
         if new_x < self.start_x - self.boundary or new_x > self.start_x + self.boundary:
             self.vx *= -1
-            
             self.sprite.scale_x *= -1
             new_x = self.sprite.center_x + self.vx
 

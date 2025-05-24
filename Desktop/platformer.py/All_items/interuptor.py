@@ -1,8 +1,8 @@
 import arcade
-from enum import Enum, auto
 from typing import Callable
 
-
+#class qui gère les interupteurs, qui prend un sprite pour pouvoir faire un lien entre les actions du levier et le sprite 
+# qui est draw.
 class Inter :
     sprite: arcade.Sprite
     state : bool
@@ -22,9 +22,9 @@ class Inter :
         self.disable = False
 
     def trigger(self) -> None:
+        #change de côté en focntion de son state et si il n'est pas disable
         if self.disable == True:
             return None
-        
         if self.state == False:
             self.sprite.texture = arcade.load_texture(":resources:/images/tiles/leverRight.png")
             for action in self.actions_on :
