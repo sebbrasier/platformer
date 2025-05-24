@@ -25,10 +25,6 @@ def test_sword(window: arcade.Window) -> None:
     view.player_sprite.center_x += 250
     window.test(50)
 
-    blob1 : blob
-    if isinstance(view.monster_TABLE.monsters[0],blob):
-        blob1 = view.monster_TABLE.monsters[0]
-
     # Rendre l'épée visible et positionner son sprite sur le blob.
     Sword.can_kill = True
     sword.attribute.visible = True

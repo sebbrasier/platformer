@@ -1,25 +1,20 @@
 import arcade
 from readmap import *
 import math
-from typing import Final, Tuple
-from abc import ABC, abstractmethod
+from typing import Tuple
+from abc import abstractmethod
 from All_monsters.monsters import *
 from All_weapons.weapons import *
 from All_items.interuptor import *
 from All_items.gate import *
 from pyglet.math import Vec2
 from moving_platform import *
-import random
 
 #Variables globales
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 #Taille d'un "carreau" de la grille définie dans readmap
 Grid_size = 64
-#Initialisation du son 
-
-
-
 #Classe pour voir quelle arme est active:
 class Active_Weapon:
     weapons : list[Weapon]
@@ -49,13 +44,13 @@ class GameView(arcade.View):
     next_level_list : arcade.SpriteList[arcade.Sprite]
     player_sprite : arcade.Sprite
     player_sprite_list : arcade.SpriteList[arcade.Sprite]
-
     wall_list : arcade.SpriteList[arcade.Sprite]
     coin_list : arcade.SpriteList[arcade.Sprite]
     no_go_list : arcade.SpriteList[arcade.Sprite]
     monster_list : arcade.SpriteList[arcade.Sprite]
     weapon_icon_list : arcade.SpriteList[arcade.Sprite]
     weapon_list : arcade.SpriteList[arcade.Sprite] 
+
     #Initialisation des listes pour stocker les sprites ainsi que la classe de platformes
     platform_list : arcade.SpriteList[arcade.Sprite]
     platform_class_list : list[moving_platform]
@@ -89,13 +84,8 @@ class GameView(arcade.View):
     file_list : Map_list
 
     def __init__(self) -> None:
-        # Magical incantion: initialize the Arcade view
         super().__init__()
-
-        # Choose a nice comfy background color
         self.background_color = arcade.csscolor.CORNFLOWER_BLUE
-
-        #Rajout du score
         self.coin_score = score(0)
 
         #Chargement des polices
@@ -110,8 +100,6 @@ class GameView(arcade.View):
         self.game_over_sound = arcade.load_sound(":resources:/sounds/gameover3.wav")
         self.hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
         self.error_sound = arcade.load_sound(":resources:/sounds/error5.wav")
-        self.timer_started = False
-        self.timer = 0.0
 
         #Initialisation des listes de fichiers
         self.file_list = Map_list(["maps/map5.txt","maps/map4.txt", "maps/map1.txt", "maps/map2.txt", "maps/map3.txt"], 0)  #"maps/map_tests/moving_platforms/block9.txt", 
@@ -121,8 +109,10 @@ class GameView(arcade.View):
 
     def setup(self, MAP_file : str) -> None:
     
+        # lecture de la partie yaml du fichier map
         config  = load_map_config(MAP_file)
         self.weapon_disable_zones: list[Tuple[int,int,int,int]] = []
+        # ajoute les coordonnées de chaque zone dans une list de Tuple différentes pour les 2 types de zones
         for z in config.get("weapon_disable_zones", []):
             self.weapon_disable_zones.append((
                 int(z["x1"]),
@@ -147,7 +137,7 @@ class GameView(arcade.View):
         self.weapon_icon_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList(use_spatial_hash=True)
         self.no_go_list = arcade.SpriteList(use_spatial_hash=True)
-        self.monster_list = arcade.SpriteList(use_spatial_hash=True)
+        self.monster_list = arcade.SpriteList()
         self.next_level_list = arcade.SpriteList(use_spatial_hash=True)
         self.player_sprite_list = arcade.SpriteList()
         self.arrow_list = arcade.SpriteList()
@@ -201,10 +191,10 @@ class GameView(arcade.View):
             walls = self.wall_list,
             gravity_constant=PLAYER_GRAVITY,
         )
+        #ajoute les gate à la liste des wall pour qu'ils aient le même effet
+        self.wall_list.extend(self.gate_list)
 
-        #rajout des interrupteurs
-        self.wall_list.extend(self.gate_list)  
-        
+        #fait le lien entre les switch et gate comme indiqué dans le yaml  
         init_gate_states_from_config(config,self.gate_class_list,self.wall_list)
         link_inter_to_gates(config,self.inter_class_list,self.gate_class_list,self.wall_list)     
 
@@ -224,7 +214,7 @@ class GameView(arcade.View):
         for weapon in self.active_weapon.weapons:
             weapon.attribute.visible = False
         
-        #Initialisation de l'icone des armes
+        #Initialisation des icones
         self.sword_repr = arcade.Sprite("assets/kenney-voxel-items-png/axe_gold.png", scale = 0.5, center_x=60, center_y = 550)
         self.bow_repr = arcade.Sprite("assets/kenney-voxel-items-png/bowArrow.png", scale = 0.5, center_x=60, center_y = 550)
         self.no_weapon_repr = arcade.Sprite("assets/kenney_board-game-icons/PNG/hand_cross.png", scale = 0.5, center_x=60, center_y = 450)
@@ -309,7 +299,7 @@ class GameView(arcade.View):
              self.file_list.index += 1
              self.setup(self.file_list.Maps[self.file_list.index])
     
-     #Ranger les sprites dans la bonne liste selon son asset
+    #Ranger les sprites dans la bonne liste selon son asset
     def sprite_type(self, type: str, sprite: arcade.Sprite, map_x: int, map_y: int) -> None:
         if type == "Wall":
             self.wall_list.append(sprite)
@@ -317,7 +307,7 @@ class GameView(arcade.View):
               self.coin_list.append(sprite)
         if type == "Chauve-souris":
             self.monster_list.append(sprite)
-            chauve_S = chauve_souris(sprite,-1, 100, 0.01)
+            chauve_S = chauve_souris(sprite,1, 100, 0.01)
             self.monster_TABLE.monsters.append(chauve_S)
         if type == "Blob":
             self.monster_list.append(sprite)
@@ -330,6 +320,7 @@ class GameView(arcade.View):
             self.player_sprite_list.append(self.player_sprite)
         if type == "Next_level":
             self.next_level_list.append(sprite)
+        # pour gate et inter on les ajoute aussi dans des "class_list" pour pouvoir les gérer en tant que sprite ET gate/Inter
         if type == "gate":
             gate = Gate(sprite,map_x, map_y)
             self.gate_list.append(sprite)
@@ -352,6 +343,7 @@ class GameView(arcade.View):
         self.arrow_list.append(arrow)
         return arrow
     
+    #Fonction qui fait comme le can_jump de arcade de base mais qui marche aussi quand le joueur est à l'envers dû à la gravité inverse
     def can_jump_homemade(self,gravity_index : int, y_distance: float = 5.0) -> bool:
         offset = - y_distance * gravity_index
         self.player_sprite.center_y += offset
@@ -359,7 +351,7 @@ class GameView(arcade.View):
         hits = arcade.check_for_collision_with_list(self.player_sprite,self.wall_list)
         hits += arcade.check_for_collision_with_list(self.player_sprite,self.platform_list)
         self.player_sprite.center_y -= offset
-
+        
         return len(hits) > 0
     
     #Définit tout ce qui se passe quand le joueur appuye sur le click gauche
@@ -379,7 +371,7 @@ class GameView(arcade.View):
             weapon : Weapon
             weapon = self.active_weapon.weapons[self.active_weapon.index]
             self.Allow_change_weapon = False
-            #S'assurer que l'épée ne peut que tuer le blob pendait le click
+            # active le fait que l'épée puisse fonctionner lors de la frame du clic
             Sword.can_kill = True
             if self.active_weapon.index == 1:
                 #Fait appraitre la flèche si on a séléctionné l'arc
@@ -416,17 +408,15 @@ class GameView(arcade.View):
         PLAYER_JUMP_SPEED = 18
         
         if key == arcade.key.RIGHT:
-            # start moving to the right
+            # se déplace à droite
             self.player_sprite.change_x = + PLAYER_MOVEMENT_SPEED
             self.key_right = True
     
         if key == arcade.key.LEFT:
-            # start moving to the left
+            # se déplace à gauche
             self.player_sprite.change_x = - PLAYER_MOVEMENT_SPEED
             self.key_left = True
 
-
-            
         gravity_constant : int = 1
         position_x = int(self.player_sprite.center_x // Grid_size)
         position_y = int(self.player_sprite.center_y // Grid_size)
@@ -436,9 +426,7 @@ class GameView(arcade.View):
                 break
         if key == arcade.key.UP and self.can_jump_homemade(gravity_constant): 
 
-            # start moving to the left
             self.player_sprite.change_y = PLAYER_JUMP_SPEED * gravity_constant 
-
             #son
             arcade.play_sound(self.jump_sound)
 
@@ -507,34 +495,19 @@ class GameView(arcade.View):
             self.coin_score.erase
         # son 
             arcade.play_sound(self.game_over_sound)
-            
-    """Main in-game view."""
-    def on_update(self, delta_time: float) -> None:
-        self.physics_engine.update()
-        self.monster_list.update()
-        self.no_go_list.update()
-        self.inter_list.update()
-        self.next_level_list.update()
 
-        self.check_for_next_level()
-        self.cam_control()
-
-        coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
-        for coin in coin_hit:
-            coin.remove_from_sprite_lists()
-            self.coin_score.points += 1
-        #son
-            arcade.play_sound(self.coin_sound)
-
-                # savoir si on rentre dans la no_weapon zone
+    #Fonction qui regarde si on est dans une des zones définies et qui affiche les icones correspondant 
+    def in_zone(self)->None:
+        # savoir si on rentre dans la no_weapon zone
         position_x = int(self.player_sprite.center_x // Grid_size)
         position_y = int(self.player_sprite.center_y // Grid_size)
 
-        # 2) Vérifier si on est dans l'une des zones
         self.physics_engine.gravity_constant = 1
         self.player_sprite.angle = 0
         self.no_weapon_repr.visible = False
         self.gravity_change.visible = False
+
+        # verification de si le joueur est dans une des zones
         for x1, y1, x2, y2 in self.weapon_disable_zones:
             if x1 <= position_x <= x2 and y1 <= position_y <= y2:
                 self.no_weapon_repr.visible = True
@@ -544,27 +517,45 @@ class GameView(arcade.View):
                 self.player_sprite.angle = 180
                 self.gravity_change.visible = True
                 break
-               
-                
+    
+    #Fonction qui verifi si le joueur touche une pièce et qui change le score en fonction
+    def coin_hit(self)->None:
+        coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
+        for coin in coin_hit:
+            coin.remove_from_sprite_lists()
+            self.coin_score.points += 1
+        
+            arcade.play_sound(self.coin_sound)
+
+    """Main in-game view."""
+    def on_update(self, delta_time: float) -> None:
+        self.physics_engine.update()
+        # update des listes
+        self.monster_list.update()
+        self.no_go_list.update()
+        self.inter_list.update()
+        self.next_level_list.update()
+        self.in_zone() 
+        self.check_for_next_level()
+        self.cam_control()
+        self.coin_hit()
+
         #update position de l'arme sur l'écran
         weapon = self.active_weapon.weapons[self.active_weapon.index]
         weapon.camera_position = self.camera.position
         weapon.player_sprite = self.player_sprite
         weapon.update_weapon_position()
+        weapon.check_hit_monsters(self.monster_list)
 
         #Update la position des platformes non-controlées par arcade
         for e in self.platform_class_list:
             e.move()
-        
-        #check si l'épée touche un monstre
-        weapon.check_hit_monsters(self.monster_list)
         
         #Update position des flèches:
         for arrow in self.arrow_list:
             arrow.change_y -= 1.5
         self.arrow_list.update()
 
-       
         #check si on touche un interupteur
         for inter in self.inter_class_list:
             if weapon.check_hit_inter(inter.sprite) == True and self.active_weapon.index == 0:
@@ -573,7 +564,7 @@ class GameView(arcade.View):
                 if arrows.check_hit_inter(inter.sprite) == True:
                     inter.trigger()
             
-         #Check si les flèches touchent les monstres
+        #Check si les flèches touchent les monstres
         for arrows in self.arrow_class_list:
             if arrows.arrow_collision(self.no_go_list, self.monster_list, self.wall_list, self.platform_list, self.inter_list) is True:
                 self.arrow_class_list.remove(arrows)
@@ -597,7 +588,6 @@ class GameView(arcade.View):
             if e.is_dropped is True:
                 e.drop()
             e.go_up()          
-    
 
         #Detection de la collision avec la lave et les blobs:
         self.game_over(self.no_go_list)

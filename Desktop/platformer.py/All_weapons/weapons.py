@@ -1,11 +1,9 @@
 import arcade
 from readmap import *
 import math
-from typing import Final
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from All_monsters.monsters import *
 from All_items.interuptor import *
-import random
 
 hit_sound = arcade.load_sound(":resources:/sounds/hurt4.wav")
 
@@ -47,20 +45,21 @@ class Weapon:
             for monster in monsters_hit:
                 monster.remove_from_sprite_lists()
                 arcade.play_sound(hit_sound)
+    # methode pour vérifier les collision avec les interupteurs
     def check_hit_inter(self, inter : arcade.Sprite) ->bool:
         if self.attribute.visible == True:
             inter_hit = arcade.check_for_collision(self.attribute, inter)
             return inter_hit
         return False
 
-            
-
 #Class pour l'épée qui hérite de Weapon
 class Sword(Weapon):
+    # initialisation d'un booléen qui sera True seulement pendant la frame du clic
     can_kill = False
     def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
         super().__init__(attribute, player_sprite, camera_position)
 
+    #Méthode qui calcul la position de l'épée
     def update_weapon_position(self) -> None:
         weapon_r = math.radians(self.attribute.angle - 50)
         vec = (25 * math.cos(weapon_r), 25 * math.sin(-weapon_r))
@@ -81,7 +80,7 @@ class Sword(Weapon):
             return super().check_hit_inter(inter)
         return False
 
-#Classe pour l'arc qui hérite de Weapon
+#Class pour l'arc qui hérite de Weapon
 class Bow(Weapon):
 
     def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:

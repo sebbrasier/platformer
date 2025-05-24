@@ -1,6 +1,9 @@
 import arcade
 import pytest
 from gameview import *
+
+# on commence par plusieurs tests qui vérifient que les Error sont bien lancées quand les informations sur les gate/switch 
+# dans le yaml et la map ne sont pas en accord
 def test_yaml_height_width() -> None:
     with pytest.raises(KeyError, match="La config YAML doit contenir 'width' et 'height'."):
         load_map_config("maps/map_tests/switch_gate/noheightwidth.txt")
@@ -35,6 +38,7 @@ def test_switch_gate_place(window: arcade.Window) -> None:
     with pytest.raises(ValueError, match="Aucun portail trouvé à \(2,2\)\."):
         view.setup("maps/map_tests/switch_gate/switch_gate_place.txt")
 
+#On test plusieurs cas (open/close, state on de l'interupteur,disable, plusieurs gate en même temps)
 def test_gate_state(window: arcade.Window) -> None:
     # Initialiser la vue et la map de test
     view = GameView()
