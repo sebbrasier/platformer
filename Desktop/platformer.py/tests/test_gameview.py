@@ -77,7 +77,7 @@ def test_camera(window: arcade.Window) -> None:
     cam_i = view.camera.position[1]
     down_edge = cam_i - (WINDOW_HEIGHT / 2) + 250
     window.test(20)
-    view.player_sprite.center_y -= 1000
+    view.player_sprite.center_y -= 100
     window.test(1)
     player_y = view.player_sprite.center_y
     cam_f = view.camera.position[1]

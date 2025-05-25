@@ -2,7 +2,6 @@ import arcade
 from typing import Final
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import Final
 from readmap import *
 from collections.abc import Callable
 
@@ -52,29 +51,26 @@ class AddPlatform(ABC):
     @staticmethod
     #Function that detects a "block" or entire platform and adds them all to the same set
     def read_platform( map : Map, point : tuple[int, int], Rearrange : Callable[[tuple[int, int], Map], tuple[int, int]], point_set : set[tuple[int, int]]) -> None:
-        i = point[0]
-        j = point[1]
+        i, j =point
         matrix = map.setup
         width = map.dim[0]
         height = map.dim[1]
         point_set.add(Rearrange(point, map))
         #Recursive function that detects if all nieghboring blocks are part of the block and adds them to the platform set
         #This function stops based on the conditions on i and j
-        if i+1 < height: 
+        if i+1 < height:
             if Rearrange((i+1, j), map) not in point_set and matrix[i+1][j] in platforms:
                 AddPlatform.read_platform(map, (i+1, j), Rearrange, point_set)
-        
         if i-1 >= 0:
             if Rearrange((i-1, j), map) not in point_set and matrix[i-1][j] in platforms:
-               AddPlatform.read_platform(map, (i-1, j), Rearrange, point_set)
-            
+                AddPlatform.read_platform(map, (i-1, j), Rearrange, point_set)
         if j+1 < width:
-            if Rearrange((i, j+1),map) not in point_set and matrix[i][j+1] in platforms:
-                AddPlatform.read_platform(map, (i, j+1), Rearrange, point_set)
-            
+                if Rearrange((i, j+1),map) not in point_set and matrix[i][j+1] in platforms:
+                    AddPlatform.read_platform(map, (i, j+1), Rearrange, point_set)
         if j-1 >= 0:
             if Rearrange((i, j-1),map) not in point_set and matrix[i][j-1] in platforms:
                 AddPlatform.read_platform(map, (i, j-1), Rearrange, point_set)
+
 
     #Write a function that returns the sequences of arrows in the map, along with the position of the block they are left to
     #for this function to detect any type of arrow chain, we will need to transpose and/or flip the maps
@@ -117,10 +113,9 @@ class AddPlatform(ABC):
         right_set = {a for a in right}
         final : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]] = {}
         empty : tuple[map_symbols, ...] = ()
-        for a in left_set:
-            for b in right_set:
-                if a == b:
-                    final[b] = (left[a], right[b])
+        intersection = left_set & right_set
+        for a in intersection:
+            final[a] = (left[a], right[a])
         
         for a in left_set:
             if a not in final:
@@ -178,13 +173,12 @@ class moving_platform:
     def move(self) -> None:
         ...
     #method for dropping platforms when the player is on them
-    @abstractmethod
+
     def drop(self) -> None:
-        ...
-    
-    @abstractmethod
+        pass
+
     def go_up(self) -> None:
-        ...
+        pass
     
     #Method that detects if a platform is under a player
     def is_under(self, player : arcade.Sprite) -> bool:
@@ -263,11 +257,5 @@ class moving_platform_y(moving_platform):
             self.platform.change_y *= -1
         if self.platform.bottom <= self.boundary_left and self.platform.change_y < 0 :
             self.platform.change_y *= -1
-    
-    def drop(self) -> None:
-        pass
-    
-    def go_up(self) -> None:
-        pass
 
         

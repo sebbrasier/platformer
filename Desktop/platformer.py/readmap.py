@@ -249,7 +249,7 @@ def enum_to_sprite(char: map_symbols) -> tuple[str, str]:
     if char == map_symbols.Gate:
         return ("gate", ":resources:/images/tiles/stoneCenter_rounded.png")
     if char == map_symbols.Break:
-        return ("Wall", ":resources:/images/tiles/bridgeA.png")
+        return ("Break", ":resources:/images/tiles/bridgeA.png")
     else:
         print(char)
         raise ValueError("Erreur: caractere inconnu")
