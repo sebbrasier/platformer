@@ -1,8 +1,9 @@
 Analyse performance :
+
 Analyse des platformes:
 Si n est la taille de la map (width * height = n):
-L'ajout des platformes est un algorithme assez compliqué: un algorithme qui lit le fichier ligne par ligne en O(n) reconnait si un block est proche d'une flèche:
-Si ce block est proche d'une flèche, un algorithme récursif en O(n) regarde le blocks autour pour configurer la platforme (Il est bien en O(n), les blocks
+L'ajout des platformes est un algorithme assez compliqué: un algorithme qui lit le fichier ligne par ligne (en O(n)) reconnait si un block est proche d'une flèche:
+Si cette condition est vérifiée, un algorithme récursif en O(n) regarde le blocks autour pour configurer la platforme (Il est bien en O(n), les blocks
 qui ont déja été vérfifiés sont gardés en mémoires et on ne les re-vérifie pas).
 L'algorithme est appliqué qu'une fois par flèche, et donc qu'une fois par platforme. On a donc les deux algorithmes imbriqués qui sont en O(n) + O(n) = O(n)
 Si une platforme possède deux flèches qui la touchent (disons flèche gauche et droite):
@@ -10,7 +11,7 @@ l'algorithme ci-dessus est appliqué deux fois et la platforme touchée est cons
 On utilise un algorithme de transposition de matrices qui est en O(n)
 L'algorithme qui combine les platforme est un algorithme de recherche en O(k) ou k est la taille des platformes (En effet, on utilise l'intersection de set qui en O(2k)), considérons ici que c'est du O(n).
 On rajoute ensuite les platformes dans les listes: complexité (O(n)).
-Ainsi, grossièrement, l'algorithme mis bout à bout devrait "théoriquement" être en O(n).
+Ainsi, grossièrement, l'algorithme mis bout à bout devrait "théoriquement" être en O(n), les fonctions imbriquées ne sont appelées qu'une seule fois par platforme.
 
 Pour vérifier cela expérimentalement, nous avons utilisé des fichiers avec des platformes de taille 1-1000 affectées par deux flèches.
 On a le tableau suivant:
