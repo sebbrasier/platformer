@@ -22,8 +22,7 @@ On a le tableau suivant:
 500 : 0.024687768124975265
 1000 : 0.04772602575004566
 
-La complexité est effectivement linéaire, cela est en accord avec l'analyse théorique, mais cela est quand même surprenant, en considérant la 
-quantité de fonctions imbriquées.
+La complexité est effectivement linéaire, cela est en accord avec l'analyse théorique, mais cela est quand même surprenant, en considérant la quantité de fonctions imbriquées.
 
 Analyse des ennemis:
 Soit n le nombre d'ennemis.
@@ -63,7 +62,8 @@ Cette document décrit l’architecture de notre projet, les modules, les classe
 | **weapons.py**          | Contient une class parents weapon avec 3 sous class (Bow, Sword, Arrow)                    
 | **moving_platform.py**  | Gestion des plateformes mouvantes avec plusieurs class comme moving plateforme qui a 2 class enfants (moving_plateform_x et moving_plateform_y) ou encore la class Add_platform et LinAlgebra qui sont abstraites                   
 | **gate.py**             | Class Gate avec une méthode open et close                    
-| **interuptor.py**       | Classe Inter avec une méthode trigger quand il se fait actionner qui le fait changer de sens                     
+| **interuptor.py**       | Classe Inter avec une méthode trigger quand il se fait actionner qui le fait changer de sens       
+| **benchmark.py**        | Module qui a servi pour faire tourner les benchmarks         
 | **main.py**             | Main                          
 
 
@@ -92,6 +92,7 @@ GameView
     -Une class Weapon qui contient une méthode update weapon orientation qui sera surchargée dans Bow pour un aspect esthetique, une abstract méthode weapon position qui sera défini comme pass dans Arrow, et 2 méthode check_hit qui seront surchargé en pass ou return False pour l'arc car c'est la flèche qui fait ces actions. Les méthodes check_hit sont surchargée dans Sword pour qu'elle puisse tué que pendant la frame du clic. On a choisi de faire hérité Arrow de Weapon pour avoir directement accès aux méthodes check_hit même si elle n'utilise pas les méthodes d'orientation et de position.  
 
 ### 2.3. `Platform` (MovingPlatform)
+    -Un ensemble de méthodes utiles pour lire les platformes et les stockers dans les bonnes classes sont regroupées dans la classe abstraite AddPlatform, d'autre fonctions qui contribuent également à cela mais qui utilisent des outils d'algèbre linéaire sont rangées dans la classe LinAlgebra. On a une classe moving_platform qui va permettre à la fois de gérer les platformes normales ainsi que les platformes qui bougent. On a séparer les platformes qui se déplacent verticalement et horizontalement en deux sous classes afin de faciliter la le mouvement pour des platformes qui ne sont pas dans la platform_list gérée par le arcade physics engine.
 
 
 ### 2.4. `Gate` et `Inter`
