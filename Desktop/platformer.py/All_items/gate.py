@@ -1,7 +1,7 @@
 import arcade
 from All_items.interuptor import *
 
-# Class pour les portails
+# Class pour les portails. Elle contient ses coordonnées en attribut pour pouvoir savoir quel switch est en lien avec quel gate.
 class Gate :
     sprite: arcade.Sprite
     x :int

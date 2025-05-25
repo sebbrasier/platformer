@@ -45,3 +45,62 @@ Expérimentalement, on trouve effectivement que la complexité est linéaire:
 10000 : 0.1643470825010445
 
 
+Modules/class (Responsabilité et interaction):
+
+# DESIGN Document
+
+Cette document décrit l’architecture de notre projet, les modules, les classes, leurs responsabilités, et leurs interactions.
+
+
+## 1. Vue d'ensemble des modules
+
+| Module                  | Description                                                                   
+| ----------------------- | ----------------------------------------------------------------------------- 
+| **readmap.py**          | Lecture de la map et de la partie YAML                                        
+| **gameview.py**         | Class gameview avec ses méthodes qui permettent de faire tourner le projet (on_update, on_draw ...)
+| **monsters.py**         | Contient une class parents montres et 2 sous class (Blob et Bat)                   
+| **weapons.py**          | Contient une class parents weapon avec 3 sous class (Bow, Sword, Arrow)                    
+| **moving_platform.py**  | Gestion des plateformes mouvantes avec plusieurs class comme moving plateforme qui a 2 class enfants (moving_plateform_x et moving_plateform_y) ou encore la class Add_platform et LinAlgebra qui sont abstraites                   
+| **gate.py**             | Class Gate avec une méthode open et close                    
+| **interuptor.py**       | Classe Inter avec une méthode trigger quand il se fait actionner qui le fait changer de sens                     
+| **main.py**             | Main                          
+
+
+Monster 
+├─ Blob
+└─ Bat
+
+Weapon 
+├─ Sword
+├─ Bow
+└─ Arrow
+
+Moving_Platform 
+├─ Moving_Platform_x
+└─ Moving_Platform_y
+
+Inter 
+Gate 
+GameView
+
+
+### 2.1. `Monster` et sous-classes
+    -Une class monster qui a juste une abstract methode monster position.La class blob qui hérite de monster à donc sa propre méthdode position et aussi une méthode pour sa collision que on aurai pas pu mettre dans la class monstre car Bat n'a pas de collision. La class Bat utilise donc juste la méthode position qui ne ressemble pas du tout à celle du blob c'est pour cela que l'on a fait une abstract méthode et pas une surcharge de méthode.
+
+### 2.2. `Weapon` et sous-classes
+    -Une class Weapon qui contient une méthode update weapon orientation qui sera surchargée dans Bow pour un aspect esthetique, une abstract méthode weapon position qui sera défini comme pass dans Arrow, et 2 méthode check_hit qui seront surchargé en pass ou return False pour l'arc car c'est la flèche qui fait ces actions. Les méthodes check_hit sont surchargée dans Sword pour qu'elle puisse tué que pendant la frame du clic. On a choisi de faire hérité Arrow de Weapon pour avoir directement accès aux méthodes check_hit même si elle n'utilise pas les méthodes d'orientation et de position.  
+
+### 2.3. `Platform` (MovingPlatform)
+
+
+### 2.4. `Gate` et `Inter`
+ - Les class ne sont pas liées directment mais ont chacune leurs coordonées en attribut pour pouvoir les liées ensemble et les interupteurs ont une liste d'atcion (Callable) en attribut qui fait les actions lu dans le YAML.
+
+### 2.5. `ReadMap`
+- Son but est de séparer le fichier en une partie YAML et une partie MAP. Ensuite avec les fonctions link_inter_to_gates init_gate_states_from_config de setup les liens entre interupteurs et gate et leurs états. Les autres fonctions sont utilisées pour placer les bons spirtes au bon endroit en fonction de la map.
+
+### 2.6. `GameView`
+ -Utilisé pour tout orchestrer ensemble avec les méthodes set up on draw ou encore on update .., utilisé aussi pour la gestion de la physique ou le controle des caméras.
+
+
+
