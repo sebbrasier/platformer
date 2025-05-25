@@ -9,12 +9,15 @@ Mario Python Game est un projet de jeu de plateforme en 2D inspiré de Super Mar
 - 🔹 **Ennemis** : Blobs et chauves-souris, le joueur meurt si il les touche, et peut les éliminer avec ses armes
                     - Les blobs se déplacent de gauche à droite sans cesse et font demi tour quand il rencontrent un obstacle ou le vide.
                     - Les chauves souris volent dans un carré et se déplacent dedans de façon aléatoire. Elles peuvent traverser les obstacles.
+- 🔹 **Dangers** : Le joueur meurt si il touche un monstre ou si il tombe dans le vide
+- 🔹 **Panneaux** : Pour accéder au prochain niveau, il faut toucher le panneau exit
 - 🔹 **Zones** : dans certains niveaux, il y a des zones qui inversent la gravité et d'autre qui empêchent l'utilisation d'arme.
                  Un icône apparait quand on entre dedans.
-- 🔹 **Interupteur/Portail** : Des leviers sont positionnés sur certaines maps, qui peuvent ouvrir/fermer un ou plusieurs       portails quand ils sont actionnés par une épée ou une flèche.Certains ont des fonctionnalité particulière comme le fait de fonctionner qu'une fois.
+- 🔹 **Interupteur/Portail** : Des leviers sont positionnés sur certaines maps, qui peuvent ouvrir/fermer un ou plusieurs portails quand ils sont actionnés par une épée ou une flèche.Certains ont des fonctionnalité particulière comme le fait de fonctionner qu'une fois.
 - 🔹 **Lave** : Le joueur meurt à son contact
-- 🔹 **Plateformes mouvantes** : certaines plateformes se déplacent de haut en bas ou de gauche à droite
+- 🔹 **Plateformes qui bougent** : certaines plateformes se déplacent de haut en bas ou de gauche à droite
 - 🔹 **Plateformes qui se cassent** : certaines plateformes (Rondins) se cassent au contact du joueur et réaparaissent quelque temps après
+
 
 **Controle**
 
