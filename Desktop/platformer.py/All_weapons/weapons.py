@@ -86,7 +86,14 @@ class Bow(Weapon):
     def __init__(self, attribute : arcade.Sprite, player_sprite : arcade.Sprite, camera_position : tuple[float, float]) -> None:
         super().__init__(attribute, player_sprite, camera_position)
     
-    #L'arc se comportant différamment de l'épée, on redéfinit l'orientation avec quelques constantes qui changent
+
+    def update_weapon_position(self) -> None:
+        weapon_r = math.radians(self.attribute.angle - 50)
+        vec = (20 * math.cos(weapon_r), 20 * math.sin(-weapon_r))
+        self.attribute.center_x = self.player_sprite.center_x + vec[0]
+        self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
+
+        #L'arc se comportant différamment de l'épée, on redéfinit l'orientation avec quelques constantes qui changent
     def update_weapon_orientation(self, mouse_x: float, mouse_y: float) -> None:
         """
         Calcule la position et l'angle de l'arme pour que le manche reste fixé
@@ -98,16 +105,13 @@ class Bow(Weapon):
         ref_y = self.player_sprite.center_y   
         angle = math.atan2(ref_x - world_x,ref_y - world_y)
         self.attribute.angle = math.degrees(angle) + 120
-
-    def update_weapon_position(self) -> None:
-        weapon_r = math.radians(self.attribute.angle - 50)
-        vec = (20 * math.cos(weapon_r), 20 * math.sin(-weapon_r))
-        self.attribute.center_x = self.player_sprite.center_x + vec[0]
-        self.attribute.center_y = self.player_sprite.center_y -15 + vec[1]
     
     #L'arc ne tue personne, c'est la flèche
     def check_hit_monsters(self, monster_list : arcade.SpriteList[arcade.Sprite]) -> None:
         pass
+
+    def check_hit_inter(self, inter: arcade.Sprite) -> bool:
+        return False
 
 
 class Arrow(Weapon):
