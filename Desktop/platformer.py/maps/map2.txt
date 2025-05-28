@@ -1,0 +1,25 @@
+width: 20
+height: 6
+weapon_disable_zones:
+  - x1: 4
+    y1: 3
+    x2: 14
+    y2: 6
+switches:
+  - x: 1
+    y: 5
+    switch_on:
+      - action: open-gate
+        x: 8
+        y: 6
+      - action : disable
+---   
+              
+       v| 
+*^o  -  -  v  
+---     ←←←---→→→ 
+      *  vvvvv    
+    ---→→→→→→  -
+ S            *o   x*E
+======£££££===========
+---

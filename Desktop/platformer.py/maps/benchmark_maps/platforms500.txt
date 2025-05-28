@@ -1,0 +1,25 @@
+width: 40
+height: 21
+---
+  S
+←x££££xxxxx££££xxxxxx££££xxxxx→
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxxxx
+---
