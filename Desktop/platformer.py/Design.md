@@ -21,6 +21,8 @@ On a le tableau suivant:
 100 : 0.004888056499999948
 500 : 0.024687768124975265
 1000 : 0.04772602575004566
+![Benchmark Platforms](benchmark_platforms.png)
+
 
 La complexité est effectivement linéaire, cela est en accord avec l'analyse théorique, mais cela est quand même surprenant, en considérant la quantité de fonctions imbriquées.
 
@@ -43,6 +45,7 @@ Expérimentalement, on trouve effectivement que la complexité est linéaire:
 500 : 0.00840582708013244
 1000 : 0.016534584999317304
 10000 : 0.1643470825010445
+![Benchmark Enemies](benchmark_enemies.png)
 
 
 Modules/class (Responsabilité et interaction):
@@ -106,3 +109,6 @@ GameView
 
 
 
+
+
+[def]: image.png
