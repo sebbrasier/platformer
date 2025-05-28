@@ -1,0 +1,8 @@
+width: 10
+height: 4
+---
+S
+x
+oooooovovo
+xxxxxxxxxx
+---
