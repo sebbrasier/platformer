@@ -1,8 +1,0 @@
-width: 50
-height: 4
----
-S
-x
-oooooooovoovovoovovoovovoovovoovovoovovoovovoovovo
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
----

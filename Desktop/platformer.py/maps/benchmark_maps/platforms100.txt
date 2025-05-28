@@ -1,9 +1,0 @@
-width: 40
-height: 5
----
-  S
-←x££££xxxxx££££xxxxxx££££xxxxx→
- x££££xxxxxx££££xxxxx
- x££££xxxxx££££xxxxxx££££xxxxx
- x££££xxxxxx££££xxxxx
----
