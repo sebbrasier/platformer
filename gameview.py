@@ -229,8 +229,9 @@ class GameView(arcade.View):
             icon.visible = False
         self.weapon_icon_list[self.active_weapon.index].visible = True
 
-    #Fonction qui rajoute toutes les platformes verticales
+    
     def add_platform_x(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
+        """Fonction qui rajoute toutes les platformes verticales"""
         for a in platforms:
             sequence = platforms[a]
             for vec in a:
@@ -261,9 +262,11 @@ class GameView(arcade.View):
                     if sprite == map_symbols.Break:
                         self.drop_platform_list.append(asset_class)
                 
-    #Fonction qui rajoute les platformes horizontales
-    #Un peu de duplication de code quand il s'agit de créer le sprite, mais il n'y a pas moyen de rajouter les platformes verticales et horizontales en meme temps avec le code actuel
+    
     def add_platform_y(self, platforms : dict[frozenset[tuple[int, int]], tuple[tuple[map_symbols, ...], tuple[map_symbols, ...]]], MAP : Map) -> None:
+        """Fonction qui rajoute les platformes horizontales
+           Un peu de duplication de code quand il s'agit de créer le sprite, mais il n'y a pas moyen de rajouter les platformes
+           verticales et horizontales en meme temps avec le code actuel"""
         for a in platforms:
             sequence = platforms[a]
             for vec in a:
@@ -292,16 +295,16 @@ class GameView(arcade.View):
                     if sprite == map_symbols.Break:
                         self.drop_platform_list.append(asset_class)
     
-    #Fonction qui détecte si le joueur collisionne avec le paneau
     def check_for_next_level(self) -> None:
+        """Fonction qui détecte si le joueur collisionne avec le paneau"""
         exit_list = arcade.check_for_collision_with_list(self.player_sprite, self.next_level_list)
         for exit in exit_list:
              self.file_list.index = (1 + self.file_list.index) % len(self.file_list)
              #reset maps once we hit the end
              self.setup(self.file_list.Maps[self.file_list.index])
     
-    #Ranger les sprites dans la bonne liste selon son asset
     def sprite_type(self, type: str, sprite: arcade.Sprite, map_x: int, map_y: int) -> None:
+        """Cette fonction range les sprites selon son asset"""
         if type == "Wall":
             self.wall_list.append(sprite)
         if type == "Coin":
@@ -341,15 +344,17 @@ class GameView(arcade.View):
     key_right : bool = False
     key_left : bool = False
 
-    #Fonction qui "crée" une flèche
+    
     def create_arrow(self) -> arcade.Sprite:
+        """Fonction qui "crée" une flèche"""
         arrow = arcade.Sprite("assets/kenney-voxel-items-png/arrow.png",scale=0.3)
         arrow.visible = False
         self.arrow_list.append(arrow)
         return arrow
     
-    #Fonction qui fait comme le can_jump de arcade de base mais qui marche aussi quand le joueur est à l'envers dû à la gravité inverse
+    
     def can_jump_homemade(self,gravity_index : int, y_distance: float = 5.0) -> bool:
+        """Fonction qui fait comme le can_jump de arcade de base mais qui marche aussi quand le joueur est à l'envers dû à la gravité inverse"""
         offset = - y_distance * gravity_index
         self.player_sprite.center_y += offset
 
@@ -359,8 +364,9 @@ class GameView(arcade.View):
         
         return len(hits) > 0
     
-    #Définit tout ce qui se passe quand le joueur appuye sur le click gauche
+    
     def on_mouse_press(self, x:int, y:int, button:int, modifiers: int) -> None :
+        """Définit tout ce qui se passe quand le joueur appuye sur le click gauche"""
         if button == arcade.MOUSE_BUTTON_LEFT:
             #calcul de la zone de non arme
             position_x = int(self.player_sprite.center_x // Grid_size)
@@ -472,6 +478,7 @@ class GameView(arcade.View):
 
     #fonction de control de camera
     def cam_control(self) -> None:
+         """ Cette fonction adapte la camera selon la position du joueur"""
          player_x = self.player_sprite.center_x
          player_y = self.player_sprite.center_y
          #Calcule des "Bords" de la caméra:
@@ -491,6 +498,7 @@ class GameView(arcade.View):
               self.camera.position = Vec2(self.camera.position[0], self.camera.position[1] - abs(player_y - down_edge))
 
     def game_over(self, danger : arcade.SpriteList[arcade.Sprite]) -> None:
+        """ Cette fonction relance set up si le joueur touche un sprite de la liste danger ou si le joueur tombre trop bas """
         hit : list[arcade.Sprite]
         hit = arcade.check_for_collision_with_list(self.player_sprite, danger)
         for elements in hit:
@@ -506,8 +514,9 @@ class GameView(arcade.View):
             self.coin_score.erase
             arcade.play_sound(self.game_over_sound)
 
-    #Fonction qui regarde si on est dans une des zones définies et qui affiche les icones correspondant 
+ 
     def in_zone(self)->None:
+        """ Cette fonction vérifie si on est dans une zones et met à jour la gravité et les icones en fonction """
         # savoir si on rentre dans la no_weapon zone
         position_x = int(self.player_sprite.center_x // Grid_size)
         position_y = int(self.player_sprite.center_y // Grid_size)
@@ -528,8 +537,8 @@ class GameView(arcade.View):
                 self.gravity_change.visible = True
                 break
     
-    #Fonction qui verifi si le joueur touche une pièce et qui change le score en fonction
     def coin_hit(self)->None:
+        """Fonction qui verifi si le joueur touche une pièce et qui change le score en fonction"""
         coin_hit = arcade.check_for_collision_with_list(self.player_sprite, self.coin_list)
         for coin in coin_hit:
             coin.remove_from_sprite_lists()

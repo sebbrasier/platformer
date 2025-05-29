@@ -5,16 +5,16 @@ from gameview import *
 # on commence par plusieurs tests qui vérifient que les Error sont bien lancées quand les informations sur les gate/switch 
 # dans le yaml et la map ne sont pas en accord
 def test_yaml_height_width() -> None:
-    with pytest.raises(KeyError, match="La config YAML doit contenir 'width' et 'height'."):
+    with pytest.raises(KeyError, match=r"La config YAML doit contenir 'width' et 'height'."):
         load_map_config("maps/map_tests/switch_gate/noheightwidth.txt")
 
 def test_noyaml() -> None:
-    with pytest.raises(TypeError, match="Le fichier YAML doit contenir un dictionnaire racine"):
+    with pytest.raises(TypeError, match=r"Le fichier YAML doit contenir un dictionnaire racine"):
         load_map_config("maps/map_tests/switch_gate/noyaml.txt")
 
 def test_gate_place() -> None:
     view = GameView.__new__(GameView)
-    with pytest.raises(ValueError, match="Aucun portail à la position \(1,1\)\."):
+    with pytest.raises(ValueError, match=r"Aucun portail à la position \(1,1\)\."):
         view.setup("maps/map_tests/switch_gate/gate_place.txt")
 
 def test_switch_place(window: arcade.Window) -> None:
@@ -30,12 +30,12 @@ def test_switch_place(window: arcade.Window) -> None:
     inter_list : list[Inter] = []
     gate_list : list[Gate]= []      # peu importe pour ce test
     wall_list : arcade.SpriteList[arcade.Sprite]= arcade.SpriteList()
-    with pytest.raises(ValueError, match="Aucun interrupteur à la position \(1,1\)\."):
+    with pytest.raises(ValueError, match=r"Aucun interrupteur à la position \(1,1\)\."):
         link_inter_to_gates(config, inter_list, gate_list, wall_list)
 
 def test_switch_gate_place(window: arcade.Window) -> None:
     view = GameView.__new__(GameView)
-    with pytest.raises(ValueError, match="Aucun portail trouvé à \(2,2\)\."):
+    with pytest.raises(ValueError, match=r"Aucun portail trouvé à \(2,2\)\."):
         view.setup("maps/map_tests/switch_gate/switch_gate_place.txt")
 
 #On test plusieurs cas (open/close, state on de l'interupteur,disable, plusieurs gate en même temps)

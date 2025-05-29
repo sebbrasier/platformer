@@ -22,7 +22,8 @@ class Inter :
         self.disable = False
 
     def trigger(self) -> None:
-        #change de côté en focntion de son state et si il n'est pas disable
+        """Fonction appelée lors d'un actionnement de l'interupteur, qui ne fait rien si il est disable, qui sinon, change de côté
+        avec sa texture et applique toute ses actions qui sont dans la liste on ou off"""
         if self.disable == True:
             return None
         if self.state == False:
