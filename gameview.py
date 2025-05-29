@@ -68,6 +68,7 @@ class GameView(arcade.View):
     drop_bool : bool 
     timer_started : bool 
     timer : float
+    
 
     #Cette liste va permettre de ranger les instances de la class "monster"
     monster_TABLE : monster_table
@@ -75,6 +76,7 @@ class GameView(arcade.View):
     #UI elements
     camera: arcade.camera.Camera2D
     UI_camera : arcade.camera.Camera2D
+    level_score : int
 
     #ajout des armes
     sword : Sword
@@ -151,6 +153,7 @@ class GameView(arcade.View):
         self.inter_class_list = []
         self.gate_class_list = []
         self.drop_platform_list = []
+        self.level_score = 0
         
         MAP = Map(dim(MAP_file), lecture_map(MAP_file))
         #Ajout des platformes qui bougent
@@ -442,7 +445,9 @@ class GameView(arcade.View):
             arcade.play_sound(self.jump_sound)
 
         if key == arcade.key.ESCAPE:
+            self.coin_score.points = max(self.coin_score.points - self.level_score, 0)
             self.setup(self.file_list.Maps[self.file_list.index])
+            
             
 
     def on_key_release(self, key: int, modifiers: int) -> None:
@@ -543,6 +548,7 @@ class GameView(arcade.View):
         for coin in coin_hit:
             coin.remove_from_sprite_lists()
             self.coin_score.points += 1
+            self.level_score += 1
         
             arcade.play_sound(self.coin_sound)
 

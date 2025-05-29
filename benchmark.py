@@ -43,5 +43,4 @@ def print_benchmark_en() -> None:
     for e in maps:
         benchmark_enemies(e, maps[e])
 
-print_benchmark_plat()
 
