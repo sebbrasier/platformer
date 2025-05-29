@@ -1,0 +1,45 @@
+width: 40
+height: 41
+---
+  S
+←x££££xxxxx££££xxxxxx££££xxxxxx→
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+ x££££xxxxx££££xxxxxx££££xxxxxx
+ x££££xxxxxx££££xxx
+---
