@@ -19,6 +19,7 @@ class monster:
     
     @abstractmethod
     def monster_position(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> None:
+        """Fonction qui va être définie par les classes enfants pour gérer la position des monstres"""
         ...
 
 #Création d'une classe pour les blobs
@@ -31,6 +32,7 @@ class blob(monster):
     
     #Fonction de collision avec l'exterieur: propre aux blobs
     def monster_collision(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> bool:
+        """Fonction de collision avec l'exterieur: propre aux blobs,elle renvoit True si il arrive au bout d'une plateforme ou qu'il percute un obstacle"""
         #point en dessous du blob pour les collision sur les bords
         blob = self.sprite
         change_x = self.speed
@@ -52,8 +54,9 @@ class blob(monster):
              return True
         return False
     
-    #Fonction qui déplace le blob
     def monster_position(self, no_go_list : arcade.SpriteList[arcade.Sprite], wall_list : arcade.SpriteList[arcade.Sprite]) -> None:
+        """Cette fonction gère le déplacement du blob, elle utilise monster_collision pour changer de direction si 
+        il y a une collision. Elle change l'orientation visuel du sprite selon sa direction"""
         collision = self.monster_collision(no_go_list, wall_list)
         if collision is True:
                 #si il y a une collision, la vitesse du blob est inversée ainsi que sa position
@@ -84,9 +87,11 @@ class chauve_souris(monster):
         self.vy = math.sin(angle) * speed
         self.random_dir = random_dir
 
-    #Fonction de déplacement des chauves-souris, avec la fonction random.gauss avec une moyenne à 0 et un écart type a pi/20
-    #pour que la chauve souris ait une grande probabilité de faire un petit changement de direction et une très petite de faire un 180°.
+
     def monster_position(self, no_go_list: arcade.SpriteList[arcade.Sprite], wall_list: arcade.SpriteList[arcade.Sprite]) -> None:
+        """ Fonction de déplacement des chauves-souris, avec la fonction random.gauss avec une moyenne à 0 et un écart type a pi/20
+            pour que la chauve souris ait une grande probabilité de faire un petit changement de direction et une très petite de faire
+            un 180°. Elle fait faire à la chauve souris un 180° quand elle touche sa bordure"""
         if random.random() < self.random_dir:
             current_angle = math.atan2(self.vy, self.vx)
             delta_angle = random.gauss(0, math.pi / 20)

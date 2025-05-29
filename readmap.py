@@ -8,10 +8,8 @@ from All_items.interuptor import *
 from All_items.gate import *
 from typing import Optional
 
-
-
-# separation de la map en une partie yaml et une de la map classique
 def split_map_file(filepath: str) -> Tuple[str, str]:
+    """ Cette fonction divise le fichier map en une partie yaml et une partie map"""
     try:
         with open(filepath, 'r', encoding='utf-8', newline='\n') as f:
             content = f.read()
@@ -26,12 +24,11 @@ def split_map_file(filepath: str) -> Tuple[str, str]:
     map_part = parts[1]
     return (yaml_part, map_part)
 
-
-# lecture de la partie yaml
-
 def load_map_config(filepath: str) -> Dict[str, Any]:
     """
     Lit la partie YAML d'un fichier de map et renvoie la config.
+    On utilise des Any ici quand on renvoit config qui est un Dict[str, Any] car les clés sont des valeurs qui
+    peuvent être de tout type valide issu du YAML.
     """
     content = split_map_file(filepath)[0]
     config = yaml.safe_load(content)
@@ -70,7 +67,17 @@ def link_inter_to_gates(
     gate_list: List[Gate],
     wall_list: arcade.SpriteList[arcade.Sprite],
 ) -> None:
-    # 1) Construire dict[(x,y) → Gate]
+    """
+    Lie chaque interrupteur à ses portails selon la configuration YAML.
+    Cette fonction :
+      1. Construit un dictionnaire { (x, y) → Gate } à partir de gate_list.
+      2. Parcourt la liste des "switches" dans config, identifie pour chacun :
+         - l'interrupteur concerné (en comparant les coordonnées),
+         - son état initial,
+         - les listes d'actions à exécuter lorsqu'on l'active ou désactive.
+      3. Pour chaque action décrite, crée un callable qui ouvrira ou fermera le portail approprié
+         ou désactivera l'interrupteur.
+      4. En cas d'erreur de coordonnées, renvoit une  ValueError."""
     gate_dict: Dict[Tuple[int, int], Gate] = {
         (g.x, g.y): g for g in gate_list
     }
