@@ -49,7 +49,8 @@ Chaque niveau est défini par un fichier map de largeur `width` et hauteur `heig
 | `x`     | Caisse                                                             |
 | `S`     | Point de spawn du joueur                                           |
 | `E`     | Panneau pour aller au niveau suivant                               |
-| `|`     | Portail s'ouvre ou se ferme avec un interupteur                    |
+| `^`     | Interrupteur qui permet d'ouvrir un portail sur la map             |
+| `|`     | Portail relié à un Interrupteur                                    |                                                   
 | `b`     | Rondin qui se casse sous le joueur                                 |
 
 

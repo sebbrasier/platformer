@@ -4,7 +4,7 @@ Pour la lecture du fichier, nous avons créé une fonction "def char_to_sprite" 
 
 Comment avez-vous adapté vos tests existants au fait que la carte ne soit plus la même qu’au départ ? Est-ce que vos tests résisteront à d’autres changements dans le futur ? Si oui, pourquoi ? Si non, que pensez-vous faire plus tard ?
 
-non il faudrait faire des test qui prennent en compte la map tel que l'on nous la donne et pas des tests prédéfinis
+Oui les tests sont adaptés: On peut lancer une map quelconque depuis setup qui est bien adaptée à chaque test. Les test résisteront donc à des changements de maps, mais ils ne peuvent pas résister à des changements de logique du code ou de fonctionalités d'objets, mais cela on y peut rien, il faut les refaire. 
 
 Le code qui gère la lave ressemble-t-il plus à celui de l’herbe, des pièces, ou des blobs ? Expliquez votre réponse.
 
@@ -59,8 +59,8 @@ Pour identifier les blocs, on utilise un algorithme recursif: si on bloc est a p
 
 Sur quelle structure travaille cet algorithme ? Quels sont les avantages et inconvénients de votre choix ?
 L'algorithme travaille sur des matrices et utilise des frozensets et des dictionnaires
-Avantages : Cela permet de réellement séparer chaque étape du procéssus de recognisation et calcul des platformes, on travaille sur des matrices, frozensets et dictionnaires, ce qui simplifie grandement la tache et qui profite du hash (nottament recherche en teta(1)), 
-Désavantages : On a presque trop séparé les fonctions, cela fait qu'il est un peu difficile de bien imbriqué les fonctions, de plus, il faut transposer ou renverser les matrices "map" pour lire les flèche de haut en bas ou de droite à gauche, ce qui ajoute de la complexité
+Avantages : Cela permet de réellement séparer chaque étape du procéssus de recognisation et calcul des platformes, on travaille sur des matrices, frozensets et dictionnaires, ce qui simplifie grandement la tache et qui profite du hash (nottament recherche en teta(1)), on a donc un algorithme efficace et pas trop couteux.
+Désavantages : On a presque trop séparé les fonctions, cela fait qu'il est un peu difficile de bien les imbriquer. De plus, il faut transposer ou renverser les matrices "map" pour lire les flèche de haut en bas ou de droite à gauche, ce qui ajoute de la complexité
 
 Quelle bibliothèque utilisez-vous pour lire les instructions des interrupteurs ? Dites en une ou deux phrases pourquoi vous avez choisi celle-là.
 
