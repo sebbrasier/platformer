@@ -1,6 +1,10 @@
-Analyse performance :
+# DESIGN Document
 
-Analyse des platformes:
+Cette document décrit l’architecture de notre projet, les modules, les classes, leurs responsabilités, et leurs interactions ainsi que les performances.
+
+## 1.Analyse performance :
+
+### Analyse des platformes:
 Si n est la taille de la map (width * height = n):
 L'ajout des platformes est un algorithme assez compliqué: un algorithme qui lit le fichier ligne par ligne (en O(n)) reconnait si un block est proche d'une flèche:
 Si cette condition est vérifiée, un algorithme récursif en O(n) regarde le blocks autour pour configurer la platforme (Il est bien en O(n), les blocks
@@ -14,6 +18,7 @@ On rajoute ensuite les platformes dans les listes: complexité (O(n)).
 Ainsi, grossièrement, l'algorithme mis bout à bout devrait "théoriquement" être en O(n), les fonctions imbriquées ne sont appelées qu'une seule fois par platforme.
 
 Pour vérifier cela expérimentalement, nous avons utilisé des fichiers avec des platformes de taille 1-1000 affectées par deux flèches.
+
 On a le tableau suivant:
 
 | Platformes| Temps écoulé
@@ -30,7 +35,8 @@ On a le tableau suivant:
 
 La complexité est effectivement linéaire, cela est en accord avec l'analyse théorique, mais cela est quand même surprenant, en considérant la quantité de fonctions imbriquées.
 
-Analyse des ennemis:
+### Analyse des ennemis:
+
 Soit n le nombre d'ennemis.
 On a plusieurs algorithmes indépendants:
 collision entre ennemi et joueur: Regarde si check_for_collision_with_list est vide, cet algorithme est en O(n) selon la documentation d'arcade.
@@ -58,12 +64,8 @@ Expérimentalement, on trouve effectivement que la complexité est linéaire:
 
 Modules/class (Responsabilité et interaction):
 
-# DESIGN Document
 
-Cette document décrit l’architecture de notre projet, les modules, les classes, leurs responsabilités, et leurs interactions.
-
-
-## 1. Vue d'ensemble des modules
+## 2. Vue d'ensemble des modules
 
 | Module                  | Description                                                                   
 | ----------------------- | ----------------------------------------------------------------------------- 
@@ -116,7 +118,3 @@ GameView
  -Utilisé pour tout orchestrer ensemble avec les méthodes set up on draw ou encore on update .., utilisé aussi pour la gestion de la physique ou le controle des caméras.
 
 
-
-
-
-[def]: image.png
